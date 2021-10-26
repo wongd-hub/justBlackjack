@@ -1,14 +1,16 @@
 /* Page Title/Navbar */
 .title-bar {
-    height: 10%;
+    height: 50px;
+    position: fixed;
+    box-sizing: border-box;
 }
 
 .page-title {
     font-family: 'Noto Sans Mono', monospace;
     font-weight: 900;
     font-size: 2em;
-    /* display: inline-block; */
-    float: left;
+    display: inline-block;
+    /* float: left; */
 }
 
 .page-title a {
@@ -24,13 +26,14 @@
 }
 
 .navbar {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    /* display: inline-block; */
     float: right;
-    padding: 1%;
-  }
+    position: relative;
+    bottom: 0px;
+    padding-right: 10px;
+    box-sizing: border-box;
+    height: 50px;
+    vertical-align: text-bottom;
+}
 
 .navbar li {
     display: inline;
