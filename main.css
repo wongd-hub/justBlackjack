@@ -59,3 +59,27 @@ div {
 .rules {
     font-family:  'Noto Sans Mono', monospace;
 }
+
+#hit-button {
+    font-family:  'Noto Sans Mono', monospace;
+    background-color: aquamarine;   
+    display: inline;
+}
+
+#stand-button {
+    font-family:  'Noto Sans Mono', monospace;
+    background-color: aquamarine;   
+    display: inline;
+}
+
+#double-button {
+    font-family:  'Noto Sans Mono', monospace;
+    background-color: aquamarine;  
+    display: none;
+}
+
+#split-button {
+    font-family:  'Noto Sans Mono', monospace;
+    background-color: aquamarine;   
+    display: none;
+}
