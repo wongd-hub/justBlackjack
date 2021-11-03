@@ -32,6 +32,99 @@ function constructDeck(deckNumber) {
 	return deck;
 }
 
+function drawPlayerHand(playerHand) {
+    var cardSelector =[];
+    playerHand.forEach(function(x) { cardSelector.push(`${x.value}${x.suit}`) })
+
+    var cardsToDisplay = [];
+    for (let i = 0; i <= cardSelector.length - 1; i++) {
+        cardsToDisplay.push('<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === cardSelector[i] })[0].cardEntity) + '</p>')
+    }
+
+    document.getElementById('player-cards').innerHTML = '<div class="card-holder" id="ply-card-holder">' + cardsToDisplay.join('') + '</div>';
+    document.getElementById('player-cards')
+        .insertAdjacentHTML('beforeend', 
+            `<h2 class="player-total" id="player-total">Your Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span></h2>`)
+}
+
+function updateShoeCount(shoe) {
+    document.getElementById('remaining-cards').innerHTML = `${shoe.length} cards remaining<br>${shoe.length - safetyCardPosition} until cut card`
+}
+
+function updateConsole(update = 'No console update provided') {
+    var parentElement = document.getElementById('blinker').parentNode;
+    var newMessage = document.createElement('p');
+
+    newMessage.innerHTML = `> ${update}<br>`;
+    parentElement.insertBefore(newMessage, document.getElementById('blinker'))
+    // document.getElementById('console').insertAdjacentHTML('afterbegin', `> ${update}<br>`);
+}
+
+function introduceRule(rule) {
+    document.getElementById('rule-set').innerHTML += `<li>${rule}</li>`
+}
+
+function addToPlayerHand(playerHand, playerHValue) {
+    // Only add if there is currently something in the graphic.
+    if (document.getElementById('player-cards').innerHTML != '') {
+        // Get last card in hand
+        var lastCard = playerHand[playerHand.length - 1];
+        var lastCardName = `${lastCard.value}${lastCard.suit}`;
+
+        // Lookup card graphic and insert at end of the card-holder div
+        document.getElementById('ply-card-holder')
+            .insertAdjacentHTML('beforeend', 
+                '<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === lastCardName })[0].cardEntity) + '</p>')
+
+        // Update total
+        document.getElementById('player-total').innerHTML = `Your Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span>`;
+    }
+}
+
+function drawDealerHand(dealerHand) {
+    var cardSelector = [];
+    dealerHand.forEach(function(x) { cardSelector.push(`${x.value}${x.suit}`) })
+
+    var cardsToDisplay = [];
+    cardsToDisplay.push('<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === cardSelector[0] })[0].cardEntity) + '</p>');
+    cardsToDisplay.push('<p id="dlr-scd-crd">' + prepCardStringForHTML(cardList[0].cardEntity, backing = true) + '</p>');
+
+    document.getElementById('dealer-cards').innerHTML = '<div class="card-holder" id="dlr-card-holder">' + cardsToDisplay.join('') + '</div>';
+}
+
+function revealDealerSecondCard(dealerHand) {
+
+    // Only do this if the dealer has two cards currently and the card hasn't been flipped yet
+    if (dealerHand.length === 2 & document.getElementsByClassName('dealer-total').length === 0) {
+        updateConsole('Revealing dealer\'s second card');
+
+        var cardSelector = `${dealerHand[dealerHand.length - 1].value}${dealerHand[dealerHand.length - 1].suit}`;
+        document.getElementById('dlr-scd-crd').innerHTML = prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === cardSelector })[0].cardEntity);
+
+        // Update total
+        document.getElementById('dealer-cards').insertAdjacentHTML('beforeend', 
+            `<h2 class="dealer-total" id="dealer-total">Dealer Total: <span class="col-emphasis">${calculateHValue(dealerHValue).postAceOptions.join(' / ')}</span></h2>`);
+    }
+
+}
+
+function addToDealerHand(dealerHand, dealerHValue) {
+    // Only add if there is currently something in the graphic.
+    if (document.getElementById('dealer-cards').innerHTML != '') {
+        // Get last card in hand
+        var lastCard = dealerHand[dealerHand.length - 1];
+        var lastCardName = `${lastCard.value}${lastCard.suit}`;
+
+        // Lookup card graphic and insert at end of the card-holder div
+        document.getElementById('dlr-card-holder')
+            .insertAdjacentHTML('beforeend', 
+                '<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === lastCardName })[0].cardEntity) + '</p>')
+
+        // Update total
+        document.getElementById('dealer-total').innerHTML = `Dealer Total: <span class="col-emphasis">${calculateHValue(dealerHValue).postAceOptions.join(' / ')}</span>`;
+    }
+}
+
 // Normal methods of shuffling an array fall over when
 //  attempting to shuffle an array of objects. The following
 //  solution ameliorates that: https://stackoverflow.com/a/49555388
@@ -51,10 +144,6 @@ function initiateDeckSetup(shoe) {
     
     // Discard first card
     discardRack.push(shoe.shift())
-
-    // Insert safety card/card cut (between 75 and 61 cards)
-    var cardsToRemove = Math.floor(Math.random() * (76 - 61) + 61);
-    while (cardsToRemove--) { shoe.pop(); }
 
 }
 
@@ -82,6 +171,12 @@ function purgeHands() {
         var cardsToPurge = dealerHValue.length
         while (cardsToPurge--) { dealerHValue.pop(); }
     }
+
+    // Purge graphics
+    document.getElementById('player-cards').innerHTML = '';
+    document.getElementById('dealer-cards').innerHTML = '';
+    // document.getElementById('player-total').innerHTML = '';
+    // document.getElementById('dealer-total').innerHTML = '';
 }
 
 function dealCards(shoe) {
@@ -97,6 +192,57 @@ function dealCards(shoe) {
     // Extract numerical values to playerHValue and dealerHValue
     playerHand.forEach(function (item) { playerHValue.push(item.numericValue) });
     dealerHand.forEach(function (item) { dealerHValue.push(item.numericValue) });
+
+    drawPlayerHand(playerHand);
+    drawDealerHand(dealerHand);
+
+    updateConsole('Cards dealt out');
+
+    ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, dealerHand);
+    ruleFAceCards(cardType = 'ace', beforeDealReveal = true, playerHand, dealerHand);
+
+    if (dealerHand[0].numericValue === 24601) {
+        document.getElementById('insurance-rule').style.visibility = 'visible';
+        document.getElementById('insurance-rule').style.opacity = '1';
+        updateConsole('Don\'t do it!');
+    }
+
+    // Determine which buttons are available to user
+    if (calculateHValue(playerHValue).initialState === 'blackjack') {
+        if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+            revealDealerSecondCard(dealerHand);
+            ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
+            ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
+            document.getElementById('next-round-button').style.display = 'inline';
+            document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+            console.log('Both player and dealer have blackjack');
+            updateConsole('Both player and dealer have blackjack');
+            endOfRoundState();
+        } else {
+            revealDealerSecondCard(dealerHand);
+            ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
+            ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
+            document.getElementById('next-round-button').style.display = 'inline';
+            document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
+            console.log('Player has blackjack');
+            updateConsole('Player has blackjack');
+            endOfRoundState();
+        }
+    }
+
+    if (playerHValue[0] === playerHValue[1]) { 
+        document.getElementById('split-button').style.display = 'inline'; 
+        document.getElementById('split-rule').style.visibility = 'visible';
+        document.getElementById('split-rule').style.opacity = '1';
+        updateConsole('Player cards have equal value; split option available');
+    }
+
+    if ((calculateHValue(playerHValue).postAceOptions.length === 1) && (calculateHValue(playerHValue).postAceOptions[0] >= 9 && calculateHValue(playerHValue).postAceOptions[0] <= 11)) {
+        document.getElementById('double-button').style.display = 'inline';
+        document.getElementById('double-rule').style.visibility = 'visible';
+        document.getElementById('double-rule').style.opacity = '1';
+        updateConsole('Player card sum is between 9 and 11; double option available');
+    }
 
 }
 
@@ -117,7 +263,6 @@ function calculateHValue(HValueArray) {
     }
 
     result.aceCounter = aceCounter;
-    // console.log(HValueArray);
 
     // Sum value of remaining items in hand
     var preAceSum = HValueArray_copy.reduce((a, b) => a + b, 0);
@@ -187,40 +332,6 @@ function calculateHValue(HValueArray) {
     }
     return result;
 } 
-
-// Operationalise player choice - should be fine to change player hand in place in this.
-//  only place where that wouldn't be good is in the sim function
-function playerPlay(shoe, playerHand, playerHValue, playerChoice, verbose = false) {
-    var result = {};
-
-    if (playerChoice === 'stand') {
-        // Do nothing
-        result.outcome = 'continueToDealer';
-    } else if (playerChoice === 'hit') {
-        // Remove card from top of deck and add to player hand.
-        // Recalculate values and determine whether the new card makes the hand go bust.
-        playerHand.push(shoe.shift());
-        playerHValue.push(playerHand[playerHand.length - 1].numericValue);
-
-        if (calculateHValue(playerHValue).postAceOptions.filter(obj => { return obj <= 21 }).length === 0) {
-            result.outcome = 'bust';
-            result.playerValue = Math.min.apply(null, calculateHValue(playerHValue).postAceOptions);
-        } else {
-            result.outcome = 'playerCanGoAgain';
-        }
-    } else if (playerChoie === 'split') {
-        // Take current hand and create two new hands - need to determine whether another card is drawn straight away
-        // or wait until the player chooses to hit again.
-        //  If pair of aces, one card per hand is given then nothing else is allowed.
-
-
-        result.outcome = 'playerCanGoAgain';
-    } else if (playerChoice === 'double') {
-        // Only allowed when the total of the original two cards equals 9, 10, or 11.
-    }
-
-}
-
 
 // Takes the hands as arguments but doesn't change them in place
 function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, verbose = false) {
@@ -318,16 +429,18 @@ function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, ve
     while (result.outcome != 'bust' && result.outcome != 'win' && result.outcome != 'draw' && result.outcome != 'lose') {
         // Diagnostics block
         if (verbose) {console.log('BEGINNING DEALER TURN; cards:', dealerHValuetmp, '; options:', dealerCurrentHand.postAceOptions, '; initial state:', dealerCurrentHand.initialState);}
-        
+
         if (dealerHValuetmp.initialState === 'blackjack') {
             if (verbose) {console.log('Dealer has blackjack')};
 
             if (playerHValuetmp.initialState != 'blackjack') {
                 result.outcome = 'lose';
                 result.note = 'Dealer has blackjack';
+                updateConsole('Dealer has blackjack');
             } else {
                 result.outcome = 'draw';
                 result.note = 'Both parties have blackjack';
+                updateConsole('Both dealer and player have blackjack');
             }
 
         //  If dealer has one ace and counting it as 11 will bring the card total to 17 or more (but not over 21); the dealer has to count it as 11 and stand.    
@@ -335,33 +448,42 @@ function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, ve
             /*(dealerCurrentHand.preAceSum >= 6 && dealerCurrentHand.preAceSum <= 10)*/
             (Math.max.apply(null, dealerCurrentHand.postAceOptions) >= 17 && Math.max.apply(null, dealerCurrentHand.postAceOptions) <= 21)) {
             if (verbose) {console.log('Dealer has ace that can bring total to between 17 and 21')};
+            updateConsole('Dealer has ace/s that will bring sum to between 17 and 21; must stand with this total')
+            document.getElementById('dealer-total').innerHTML = `Dealer Total: <span class="col-emphasis">${Math.max.apply(null, dealerCurrentHand.postAceOptions)}</span>`;
 
             // Dealer hand value will be 11 + other card value; dealer must stand
-            result.dealerValue = 11 + dealerCurrentHand.preAceSum
+            //  This bugs out when there are two aces, e.g. A + A + 8 should evaluate to 20, but doing 11 + preAceSum = 19 which isn't correct.
+            result.dealerValue = Math.max.apply(null, dealerCurrentHand.postAceOptions) // 11 + dealerCurrentHand.preAceSum
 
             if (result.dealerValue > result.playerValue) {
                 result.outcome = 'lose';
                 result.note = 'Dealer hand greater than player hand';
+                updateConsole('Dealer has a greater hand');
             } else if (result.dealerValue === result.playerValue) {
                 result.outcome = 'draw';
                 result.note = 'Dealer hand equal to player hand';
+                updateConsole('Dealer hand is equal to player hand');
             } else if (result.dealerValue < result.playerValue) {
                 result.outcome = 'win';
                 result.note = 'Player hand greater than dealer hand';
+                updateConsole('Player has a greater hand');
             }
 
         // If dealer has no options remaining under 21, the dealer goes bust
         } else if (dealerCurrentHand.postAceOptions.filter(obj => { return obj <= 21 }).length === 0) {
             if (verbose) {console.log('Dealer has no options under or equal to 21 - bust')};
+            updateConsole('Dealer has no options under or equal to 21 - bust');
 
             result.dealerValue = Math.min.apply(null, dealerCurrentHand.postAceOptions);
-    
+            document.getElementById('dealer-total').innerHTML += ' <span class="col-oran">BUST</span>';
+
             result.outcome = 'win';
             result.note = 'Dealer went bust'; 
 
         // If dealer's options start at 17 or more, the dealer must stand
         } else if (Math.min.apply(null, dealerCurrentHand.postAceOptions.filter(obj => { return obj <= 21 })) >= 17) {
             if (verbose) {console.log('Dealer\'s options start at 17 or more - must stand')};
+            updateConsole('Dealer\'s options start at 17 or more - must stand');
 
             result.dealerValue = Math.min.apply(null, dealerCurrentHand.postAceOptions.filter(obj => { return obj <= 21 }));
 
@@ -379,9 +501,16 @@ function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, ve
         // If dealer's options are lower than 17, dealer must hit until over 17 or bust
         } else if (Math.max.apply(null, dealerCurrentHand.postAceOptions.filter(obj => { return obj <= 21 })) < 17) {
             if (verbose) {console.log('Dealer\'s options max out under 17 - must hit')};
+            updateConsole('Dealer\'s options max out under 17 - must hit');
             dealerHandtmp.push(shoe.shift());
             dealerHValuetmp.push(dealerHandtmp[dealerHandtmp.length - 1].numericValue);
             dealerCurrentHand = calculateHValue(dealerHValuetmp);
+            console.log(dealerHandtmp);
+            console.log(dealerHValuetmp);
+            addToDealerHand(dealerHandtmp, dealerHValuetmp);
+            updateShoeCount(shoe);
+            ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHandtmp);
+            ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHandtmp);
         }
     }
 
@@ -399,6 +528,34 @@ function returnForwardCards (shoe, numCards = 40) {
         return forwardCards;
     }
 
+}
+
+function resetForNextRound() {
+    readyForPlayerInput = false;
+
+    if (shoe.length <= safetyCardPosition) {
+        console.log('Safety card passed; reshuffling deck')
+        updateConsole('Cut card passed, re-shuffling deck')
+
+        // Initiate new deck and re-calculate the safety card position
+        shoe = shuffle(deck_1.concat(deck_2, deck_3, deck_4, deck_5, deck_6));
+        safetyCardPosition = Math.floor(Math.random() * (76 - 61) + 61);
+        initiateDeckSetup(shoe); updateConsole('Top card discarded');
+
+        // Deal cards
+        dealCards(shoe);
+
+    } else {
+
+        // Purge hands and re-deal cards
+        dealCards(shoe);
+
+    }
+
+    document.getElementById('next-round-button').style.display = 'none';
+    document.getElementById('hit-button').style = "inline";
+    document.getElementById('stand-button').style = "inline";
+    readyForPlayerInput = true;
 }
 
 // Retain dealer's first card and the next x - 1 cards in shoe for simulation. 
@@ -442,6 +599,56 @@ function performSim_stand(n, dealerHand, shoeForSim, numCardsAhead, verbose = fa
     return result;
 }
 
+function endOfRoundState() {
+    readyForPlayerInput = false;
+
+    // Hide all buttons
+    document.getElementById('hit-button').style.display = "none";
+    document.getElementById('stand-button').style.display = "none";
+    document.getElementById('split-button').style.display = "none";
+    document.getElementById('double-button').style.display = "none";
+
+}
+
+function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, dealerHand) {
+    if (beforeDealReveal) {
+        if (cardType === 'face') {
+            if (playerHand.map(({ value }) => value).includes('K') ||
+                playerHand.map(({ value }) => value).includes('Q') ||
+                playerHand.map(({ value }) => value).includes('J') ||
+                ['K', 'Q', 'J'].includes(dealerHand[0].value)) {
+                document.getElementById('face-rule').style.visibility = 'visible';
+                document.getElementById('face-rule').style.opacity = '1';
+            }
+        } else if (cardType === 'ace') {
+            if (playerHand.map(({ value }) => value).includes('A') ||
+                ['A'].includes(dealerHand[0].value)) {
+                document.getElementById('ace-rule').style.visibility = 'visible';
+                document.getElementById('ace-rule').style.opacity = '1';
+            }
+        }
+    } else {
+        if (cardType === 'face') {
+            if (playerHand.map(({ value }) => value).includes('K') ||
+                playerHand.map(({ value }) => value).includes('Q') ||
+                playerHand.map(({ value }) => value).includes('J') ||
+                dealerHand.map(({ value }) => value).includes('K') ||
+                dealerHand.map(({ value }) => value).includes('Q') ||
+                dealerHand.map(({ value }) => value).includes('J')) {
+                document.getElementById('face-rule').style.visibility = 'visible';
+                document.getElementById('face-rule').style.opacity = '1';
+            }
+        } else if (cardType === 'ace') {
+            if (playerHand.map(({ value }) => value).includes('A') ||
+                dealerHand.map(({ value }) => value).includes('A')) {
+                document.getElementById('ace-rule').style.visibility = 'visible';
+                document.getElementById('ace-rule').style.opacity = '1';
+            }
+        }
+
+    }
+}
+
 // Could this be done with Array.concat(Array(6).fill().map((element, index) => index).forEach(constructDeck))?
 const deck_1 = constructDeck(1);
 const deck_2 = constructDeck(2);
@@ -454,11 +661,25 @@ const deck_6 = constructDeck(6);
 //  harder on professional card counters.
 // NB2: Some JS standards may not yet support forEach, in which case you'll
 //  need to define it using https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach#polyfill
-const shoe = shuffle(deck_1.concat(deck_2, deck_3, deck_4, deck_5, deck_6));
+var shoe = shuffle(deck_1.concat(deck_2, deck_3, deck_4, deck_5, deck_6));
+updateConsole('Six decks initiated and shuffled')
+
+// Insert safety card/card cut (between 75 and 61 cards)
+var safetyCardPosition = Math.floor(Math.random() * (76 - 61) + 61);
+updateConsole('Cut card inserted')
+
+// Await user input
+var faceRuleSwitch = false;
+var aceRuleSwitch = false;
+var playerInputForRound = 'none';
+var readyForPlayerInput = true;
 
 initiateDeckSetup(shoe);
+updateConsole('Top card discarded; ready to play')
 
 dealCards(shoe); // Outputs numerical values to *Hand and *HValue arrays.
+
+updateShoeCount(shoe);
 
 console.log('Player:', playerHand);
 console.log('Dealer:', dealerHand);
@@ -468,34 +689,128 @@ var dealerFirstHValue = dealerHValue[0];
 
 // console.log(performSim_stand(n = 1000, dealerHand = dealerHand, shoeForSim = shoe, numCardsAhead = 25, verbose = true));
 
-// Determine which buttons are available to user
-if (playerHValue[0] === playerHValue[1]) {
-    document.getElementById('split-button').style.display = 'inline';
-}
-
-console.log(playerHValue);
-
-if ((calculateHValue(playerHValue).postAceOptions.length === 1) && (calculateHValue(playerHValue).postAceOptions[0] >= 9 && calculateHValue(playerHValue).postAceOptions[0] <= 11)) {
-    document.getElementById('double-button').style.display = 'inline';
-}
-
-console.log(playerHValue);
-// Await user input
-var readyForPlayerInput = true;
-var playerInputForRound = 'none';
+updateConsole('Awaiting user input')
 
 document.getElementById('hit-button').addEventListener('click', function() {
-    playerInputForRound = 'hit';
-    readyForPlayerInput = false;
 
-    console.log('Player has chosen to hit')
+    if (readyForPlayerInput) {
 
-    // Also handle changing the colour of the button when clicking etc.
+        // Copy off the hand so the original hand is unmodified
+        var playerHandtmp = JSON.parse(JSON.stringify(playerHand));
+        var playerHValuetmp = JSON.parse(JSON.stringify(playerHValue));
+
+        playerInputForRound = 'hit';
+        console.log('Player has chosen to hit'); updateConsole('Player has chosen to hit');
+        readyForPlayerInput = false;
+
+        // If player hits, will need to transfer a card from the shoe into their hand
+        //  and re-calculate their hand value.
+        playerHandtmp.push(shoe.shift());
+        playerHValuetmp.push(playerHandtmp[playerHandtmp.length - 1].numericValue);
+        console.log(playerHandtmp);
+        addToPlayerHand(playerHandtmp, playerHValuetmp); // Draw graphic
+        updateShoeCount(shoe);
+        ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHandtmp, dealerHand);
+        ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHandtmp, dealerHand);
+
+        // Check if their hand exceeds 21; if it does, then the hand is bust; reset the round
+        if (Math.min.apply(null, calculateHValue(playerHValuetmp).postAceOptions) > 21) {
+            console.log('Player has gone bust'); updateConsole('Player has gone bust');
+            document.getElementById('player-total').innerHTML += ' <span class="col-oran">BUST</span>';
+
+            playerHand = playerHandtmp;
+            playerHValue = playerHValuetmp;
+
+            // Show next round button
+            revealDealerSecondCard(dealerHand);
+            endOfRoundState();
+            document.getElementById('next-round-button').style.display = 'inline';
+
+        } else if (calculateHValue(playerHValuetmp).postAceOptions.includes(21)) {
+            console.log('Player has blackjack'); 
+
+            if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+                revealDealerSecondCard(dealerHand);
+                document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                console.log('Both player and dealer have blackjack');
+                updateConsole('Both player and dealer have blackjack');
+            } else {
+                revealDealerSecondCard(dealerHand);
+                document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
+                console.log('Player has blackjack');
+                updateConsole('Player has blackjack');
+            }
+
+            // Show next round button
+            endOfRoundState();
+            document.getElementById('next-round-button').style.display = 'inline';
+
+        } else {
+            console.log('No bust, player can go again');
+            updateConsole('Player sum under 21, player can make another move');
+
+            playerHand = playerHandtmp;
+            playerHValue = playerHValuetmp;
+
+            readyForPlayerInput = true;
+        }
+
+    } else { console.log('Game not ready for player input'); }
+
 })
 
+document.getElementById('stand-button').addEventListener('click', function() {
+
+    if (readyForPlayerInput) { // Also add the shoe.length > ... here?
+
+        // Copy off the hand so the original hand is unmodified
+        var playerHandtmp = JSON.parse(JSON.stringify(playerHand));
+        var playerHValuetmp = JSON.parse(JSON.stringify(playerHValue));
+        var dealerHandtmp = JSON.parse(JSON.stringify(dealerHand));
+        var dealerHValuetmp = JSON.parse(JSON.stringify(dealerHValue));
+
+        playerInputForRound = 'stand';
+        console.log('Player has chosen to stand'); updateConsole('Player has chosen to stand');
+        readyForPlayerInput = false;
+
+        // If player stands, transfer to dealer's turn
+        //   Reveal dealer's second card
+        //   Dealer hits until 17
+        //    Either bust or under 21 and beats player
+        revealDealerSecondCard(dealerHand);
+        ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHandtmp, dealerHand);
+        ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHandtmp, dealerHand);
+        var dealerResult = dealerPlay(shoe, playerHandtmp, playerHValuetmp, dealerHandtmp, dealerHValuetmp, verbose = true);
+
+        switch(dealerResult.outcome) {
+            case 'win':
+                console.log('Player wins');
+                document.getElementById('player-total').innerHTML += ' <span class="col-gree">WIN</span>';
+                updateConsole('Player wins');
+                break;
+            case 'lose':
+                console.log('Player loses');
+                document.getElementById('player-total').innerHTML += ' <span class="col-oran">LOSE</span>';
+                updateConsole('Player loses');
+                break;
+            case 'draw':
+                console.log('Draw');
+                document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                updateConsole('Draw');
+                break;
+
+        }
+
+        document.getElementById('next-round-button').style.display = 'inline';
+        endOfRoundState();
+
+    } else { console.log('Game not ready for player input'); }
+
+})
+
+document.getElementById('next-round-button').addEventListener('click', resetForNextRound);
 
 
-// purgeHands();
 
 //    - Can we get animated graphics? D3; Chart.js; plotly.js?
 

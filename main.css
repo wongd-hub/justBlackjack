@@ -1,85 +1,365 @@
+/* Page-wide/General CSS */
+body, html {
+    background-color: #2d2d2d;
+    color: #cccccc;
+    font-family: 'Noto Sans Mono', monospace;
+    margin: 0;
+    padding: 0;
+}
+
+div.website-body {
+    display: grid;
+    height: 100vh;
+    width: 100%;
+    grid-template: calc(60rem/16) 2fr 2fr 1fr / 25% 1fr 15% ;
+    grid-gap: 10px;
+}
+
+h2 {
+    font-weight: normal;
+    padding-left: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+span.col-emphasis {
+    color: #66cccc;
+}
+
+span.col-purp {
+    color: #cc99cc;
+}
+
+span.col-oran {
+    color: #dd7838;
+}
+
+span.col-gree {
+    color: #99ae57;
+}
+
+.card-backing {
+    color: #999999;
+}
+
 /* Page Title/Navbar */
 .title-bar {
-    height: 50px;
-    position: fixed;
     box-sizing: border-box;
+    width: 100%;
+    height: calc(60rem/16);
+    position: fixed;
+    grid-area: 1 / 1 / span 1 / span 3;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    background: linear-gradient(25deg, #2f3941, #4e5c68, #324c63);
+    padding: 0.5rem;
 }
 
 .page-title {
-    font-family: 'Noto Sans Mono', monospace;
+    /* font-family: 'Noto Sans Mono', monospace; */
     font-weight: 900;
     font-size: 2em;
-    display: inline-block;
-    /* float: left; */
-}
-
-.page-title a {
-    color: black;
-    text-decoration: none;
-}
-
-.close {
+    justify-self: start;
+    grid-area: 1 / 1 / 1 / 1;
     margin-top: 0px;
     padding-top: 0px;
     margin-bottom: 0px;
     padding-bottom: 0px;
 }
 
-.navbar {
-    float: right;
-    position: relative;
-    bottom: 0px;
-    padding-right: 10px;
-    box-sizing: border-box;
-    height: 50px;
-    vertical-align: text-bottom;
-}
-
-.navbar li {
-    display: inline;
-    font-family: 'Noto Sans Mono', monospace;
-  }
-
-.navbar li a {
-    color: black;
+.page-title a {
+    color: #cccccc;
     text-decoration: none;
-    padding-right: 10px;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
-.navbar li a:hover {
-    color: hotpink;
-    text-decoration: underline;
+.navbar-dropdown {
+    position: relative;
+    justify-self: end;
+    align-self: center;
+    grid-area: 1 / 2 / span 1 / span 1;
+    margin: 0;
+    margin-right: 10px;
+    padding: 0;
+    transition: all 200ms ease;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
 }
 
-div {
-    width: 100%;
-    height: 100%;
+.dropdwn-btn {
+    padding: 0 0.75rem;
+    transition: all 200ms ease;
 }
 
-.rules {
-    font-family:  'Noto Sans Mono', monospace;
+.dropdwn-content {
+    position: absolute;
+    opacity: 0;
+    z-index: 1;
+    background-color: #999999;
+    color: #2d2d2d;
+    font-size: 2em;
+    text-decoration: none;
+    height: 0rem;
+    width: 7rem;
+    right: calc(20rem/16);
+    overflow: hidden;
+    padding: calc(5rem/16) calc(10rem/16);
+    transition: all 200ms ease;
+}
+
+/* 
+    Using the method proposed here to get
+    animation right: 
+    https://stackoverflow.com/questions/22103006/css3-transition-doesnt-work-with-display-property
+*/
+.navbar-dropdown:hover .dropdwn-content {
+    display: block;
+    opacity: 1;
+    height: 8.5rem;
+}
+
+.navbar-dropdown:hover .dropdwn-btn {
+    background-color: #999999;
+    color: #2d2d2d;
+    cursor: pointer;
+}
+
+.navbar-dropdown p {
+    display: inline;
+    color: #cccccc;
+    text-decoration: none;
+    font-size: 2em;
+    margin-right: calc(20rem/16);
+}
+
+.dropdwn-content ul {
+    text-decoration: none;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dropdwn-content a {
+    color: #2d2d2d;
+    font-size: 1.2rem;
+    line-height: 1.2rem;
+    text-decoration: none;    
+    transition: all 200ms ease;
+}
+
+.dropdwn-content a:hover {
+    color: #cc99cc;
+}
+
+/* Side-bar */
+.side-bar {
+    grid-area: 2 / 1 / span 2 / span 1;
+}
+
+.side-bar ul {
+    position: relative;
+    font-size: 1rem;
+    font-weight: 300;
+    list-style: none;
+}
+
+.side-bar ul li::before {
+    content: '>';
+    position: absolute;
+    left: 1rem;
+}
+
+li[class*='-rule'] {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s ease, color 500ms ease;
+}
+
+/* Quick Settings Box */
+.quick-settings-box {
+    grid-area: 4 / 1 / span 1 / span 1;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    justify-items: end;
+    margin-top: auto;
+}
+
+.quick-settings-box a,
+.quick-settings-box p {
+    color: #cccccc;
+    font-weight: 300;
+    margin: 0;
+    padding: 0;
+}
+
+
+
+
+/* Player Cards */
+.card-holder {
+    display: flex;
+}
+
+.player-cards {
+    display: flex;
+    flex-direction: column;
+    grid-area: 3 / 2 / span 1 / span 1;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-cards p {
+    margin: 15px;
+    transition: all 250ms ease;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    color: #999999;
+}
+
+.player-cards p .bottom-pip {
+    transform: scale(-1, -1);
+    display: inline-block;
+}
+
+.player-cards p:hover {
+    opacity: 0.7;
+}
+
+/* Player Options */
+.player-options {
+    display: flex;
+    grid-area: 4 / 2 / span 1 / span 1;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.player-options p[id*="-button"] {
+    font-size: 2em;
+    padding: 1rem;
+    transition: color 250ms ease, background 500ms ease;
+    background: linear-gradient(35deg, rgba(47, 57, 65, 0.3), rgba(50, 76, 99, 0.3));
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+}
+
+
+.player-options p[id*="-button"]:hover {
+    color: #cc99cc;
+    cursor: pointer;
+    background: linear-gradient(35deg, rgba(47, 57, 65, 0.7), rgba(50, 76, 99, 0.7));
 }
 
 #hit-button {
-    font-family:  'Noto Sans Mono', monospace;
-    background-color: aquamarine;   
     display: inline;
 }
 
 #stand-button {
-    font-family:  'Noto Sans Mono', monospace;
-    background-color: aquamarine;   
     display: inline;
 }
 
 #double-button {
-    font-family:  'Noto Sans Mono', monospace;
-    background-color: aquamarine;  
     display: none;
 }
 
 #split-button {
-    font-family:  'Noto Sans Mono', monospace;
-    background-color: aquamarine;   
     display: none;
+}
+
+#next-round-button {
+    display: none;
+}
+
+/* Dealer Cards */
+.dealer-cards {
+    flex-direction: column;
+    grid-area: 2 / 2 / span 1 / span 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dealer-cards p {
+    margin: 15px;
+    transition: all 250ms ease;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    color: #999999;
+}
+
+.dealer-cards p .bottom-pip {
+    transform: scale(-1, -1);
+    display: inline-block;
+}
+
+.dealer-cards p:hover {
+    opacity: 0.7;
+}
+
+/* Console */
+.console {
+    color: #999999;
+    font-size: 0.7rem;
+    font-weight: 300;
+    grid-area: 3 / 3 / span 3 / span 1;
+    background: linear-gradient(35deg, rgba(47, 57, 65, 0.3), rgba(50, 76, 99, 0.3));
+    border-radius: 30px;
+    padding: 1rem;
+    /* margin-right: 5rem; */
+    overflow: scroll;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    scrollbar-color: #2f3941 999999;
+}
+
+.blinker {
+    -webkit-animation: 1s blink step-end infinite;
+    -moz-animation: 1s blink step-end infinite;
+    -ms-animation: 1s blink step-end infinite;
+    -o-animation: 1s blink step-end infinite;
+    animation: 1s blink step-end infinite;
+}
+
+@keyframes blink {
+    from, to {
+      color: transparent;
+    }
+    50% {
+      color: #cccccc;
+    }
+  }
+
+/* Shoe */
+.shoe {
+    grid-area: 2 / 3 / span 1 / span 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    align-items: center;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */
+    
+}
+
+.shoe p {
+    text-align: center;
+}
+
+#remaining-cards {
+    font-size: 0.7rem;
+    font-weight: 300;
 }

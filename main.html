@@ -12,26 +12,72 @@
 </head>
 
 <body>
-    <div class="title-bar">
-        <h1 class="close page-title"><a href="./main.html">just_blackjack</a></h1>
-        <ul class="navbar">
-            <li><a href="./settings.html">settings</a></li>
-            <li><a href="./about.html">about</a></li>
-            <li><a href="./contact.html">contact</a></li>
-        </ul>
+    <div class="website-body">
+        <div class="title-bar">
+            <h1 class="page-title">
+                <a href="./main.html">just_blackjack</a>
+            </h1>
+            <div class="navbar-dropdown">
+                <p class="dropdwn-btn">+</p>
+                <div class="dropdwn-content">
+                    <ul>
+                        <li><a href="./settings.html">settings</a></li>
+                        <li><a href="./about.html">about</a></li>
+                        <li><a href="./contact.html">contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="side-bar">
+            <h2 class="rules">rule_set</p>
+            <ul id="rule-set">
+                <li>get a higher total than the dealer, but don't go over <span class="col-purp">21</span></li>
+                <li>dealer must hit until <span class="col-purp">17</span></li>
+                <li class="face-rule" id="face-rule">face cards are worth <span class="col-emphasis">10</span></li>
+                <li class="ace-rule" id="ace-rule">aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span></li>
+                <li class="split-rule" id="split-rule">if both cards are worth the same value, the player may split their hand</li>
+                <li class="double-rule" id="double-rule">if the player's total is <span class="col-emphasis">9</span>, <span class="col-emphasis">10</span>, or <span class="col-emphasis">11</span>, they may double their bet</li>
+                <li class="insurance-rule" id="insurance-rule">if the dealer's face-up card is an ace, insurance against the dealer having blackjack may be offered to the player</li>
+            </ul>
+        </div>
+        <div class="quick-settings-box">
+            <!-- <h2 class="settings-header">quick_settings</h2> -->
+            <p>pre_alpha_build</p>
+            <p><a href=https://www.asciiart.eu/miscellaneous/playing-cards target="_blank">ASCII Card Art by ejm98</a></p>
+        </div>
+        <div class="player-cards" id="player-cards">
+        </div>
+        <div class="player-options">
+            <p id="hit-button">hit</p>
+            <p id="stand-button">stand</p>
+            <p id="split-button">split</p>
+            <p id="double-button">double</p>
+            <p id="next-round-button">next_round</p>
+        </div>
+        <div class="dealer-cards" id="dealer-cards"> 
+        </div>
+        <div class="console" id="console">
+            <div class="console-container" id="console-container">
+                <span id="blinker">><span class="blinker">_</span></span>
+            </div>
+        </div>
+        <div class="shoe">
+            <div class="shoe-container">
+                <p id="shoe-graphic">&nbsp;_____&nbsp;
+                    <br>|<span class="card-backing">\&nbsp;~&nbsp;/</span>|
+                    <br>|<span class="card-backing">}}:{{</span>|
+                    <br>|<span class="card-backing">}}:{{</span>|
+                    <br>|<span class="card-backing">}}:{{</span>|
+                    <br>|<span class="card-backing">/</span>_<span class="card-backing">~</span>_<span class="card-backing">\</span>|</p>
+                    <p>shoe</p>
+                <p id="remaining-cards"></p>
+            </div>
+        </div>
     </div>
-    <br><br>
-    <div>
-        <p class="rules">the rules are simple</p>
-    </div>
 
 
-    <p id="hit-button">HIT</p>
-    <p id="stand-button">STAND</p>
-    <p id="split-button">SPLIT</p>
-    <p id="double-button">DOUBLE</p>
-
-<script src="./main.js"></script>
+    <script src="./cardList.js"></script>
+    <script src="./main.js"></script>
 
 </body>
 
