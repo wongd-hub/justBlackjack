@@ -240,6 +240,8 @@ function prepCardStringForHTML(cardElement, backing = false) {
     }
 }
 
-// console.log(cardList[0].cardEntity)
+function drawSmallerCards(hand) {
+    
 
+}
 

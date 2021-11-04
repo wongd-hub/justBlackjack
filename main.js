@@ -60,8 +60,13 @@ function updateConsole(update = 'No console update provided') {
     // document.getElementById('console').insertAdjacentHTML('afterbegin', `> ${update}<br>`);
 }
 
-function introduceRule(rule) {
-    document.getElementById('rule-set').innerHTML += `<li>${rule}</li>`
+function introduceRule(rule, styleClass) {
+    if (!ruleSet[styleClass]) {
+        document.getElementById('rule-set').innerHTML += `<li class="${styleClass}" id="${styleClass}">${rule}</li>`;
+        document.getElementById(styleClass).style.visibility = 'visible';
+        document.getElementById(styleClass).style.opacity = '1';
+        ruleSet[styleClass] = true;
+    }
 }
 
 function addToPlayerHand(playerHand, playerHValue) {
@@ -141,10 +146,8 @@ function shuffle(array) {
 }
 
 function initiateDeckSetup(shoe) {
-    
     // Discard first card
     discardRack.push(shoe.shift())
-
 }
 
 function purgeHands() {
@@ -179,6 +182,17 @@ function purgeHands() {
     // document.getElementById('dealer-total').innerHTML = '';
 }
 
+function endOfRoundState() {
+    readyForPlayerInput = false;
+
+    // Hide all buttons
+    document.getElementById('hit-button').style.display = "none";
+    document.getElementById('stand-button').style.display = "none";
+    document.getElementById('split-button').style.display = "none";
+    document.getElementById('double-button').style.display = "none";
+
+}
+
 function dealCards(shoe) {
 
     purgeHands();
@@ -202,45 +216,40 @@ function dealCards(shoe) {
     ruleFAceCards(cardType = 'ace', beforeDealReveal = true, playerHand, dealerHand);
 
     if (dealerHand[0].numericValue === 24601) {
-        document.getElementById('insurance-rule').style.visibility = 'visible';
-        document.getElementById('insurance-rule').style.opacity = '1';
+        introduceRule('if the dealer\'s face-up card is an ace, insurance against the dealer having blackjack may be offered to the player', 'insurance-rule');
         updateConsole('Don\'t do it!');
     }
 
     // Determine which buttons are available to user
     if (calculateHValue(playerHValue).initialState === 'blackjack') {
         if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+            endOfRoundState();
+            document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
             ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
             ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
-            document.getElementById('next-round-button').style.display = 'inline';
             document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
-            console.log('Both player and dealer have blackjack');
             updateConsole('Both player and dealer have blackjack');
-            endOfRoundState();
         } else {
+            endOfRoundState();
+            document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
             ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
             ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
-            document.getElementById('next-round-button').style.display = 'inline';
             document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
-            console.log('Player has blackjack');
             updateConsole('Player has blackjack');
-            endOfRoundState();
         }
     }
 
     if (playerHValue[0] === playerHValue[1]) { 
+        introduceRule('if both cards are worth the same value, the player may split their hand', 'split-rule');
         document.getElementById('split-button').style.display = 'inline'; 
-        document.getElementById('split-rule').style.visibility = 'visible';
-        document.getElementById('split-rule').style.opacity = '1';
         updateConsole('Player cards have equal value; split option available');
     }
 
     if ((calculateHValue(playerHValue).postAceOptions.length === 1) && (calculateHValue(playerHValue).postAceOptions[0] >= 9 && calculateHValue(playerHValue).postAceOptions[0] <= 11)) {
+        introduceRule('if the player\'s total is <span class="col-emphasis">9</span>, <span class="col-emphasis">10</span>, or <span class="col-emphasis">11</span>, they may double their bet', 'double-rule');
         document.getElementById('double-button').style.display = 'inline';
-        document.getElementById('double-rule').style.visibility = 'visible';
-        document.getElementById('double-rule').style.opacity = '1';
         updateConsole('Player card sum is between 9 and 11; double option available');
     }
 
@@ -599,17 +608,6 @@ function performSim_stand(n, dealerHand, shoeForSim, numCardsAhead, verbose = fa
     return result;
 }
 
-function endOfRoundState() {
-    readyForPlayerInput = false;
-
-    // Hide all buttons
-    document.getElementById('hit-button').style.display = "none";
-    document.getElementById('stand-button').style.display = "none";
-    document.getElementById('split-button').style.display = "none";
-    document.getElementById('double-button').style.display = "none";
-
-}
-
 function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, dealerHand) {
     if (beforeDealReveal) {
         if (cardType === 'face') {
@@ -617,14 +615,16 @@ function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, d
                 playerHand.map(({ value }) => value).includes('Q') ||
                 playerHand.map(({ value }) => value).includes('J') ||
                 ['K', 'Q', 'J'].includes(dealerHand[0].value)) {
-                document.getElementById('face-rule').style.visibility = 'visible';
-                document.getElementById('face-rule').style.opacity = '1';
+                introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
+                // document.getElementById('face-rule').style.visibility = 'visible';
+                // document.getElementById('face-rule').style.opacity = '1';
             }
         } else if (cardType === 'ace') {
             if (playerHand.map(({ value }) => value).includes('A') ||
                 ['A'].includes(dealerHand[0].value)) {
-                document.getElementById('ace-rule').style.visibility = 'visible';
-                document.getElementById('ace-rule').style.opacity = '1';
+                introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
+                // document.getElementById('ace-rule').style.visibility = 'visible';
+                // document.getElementById('ace-rule').style.opacity = '1';
             }
         }
     } else {
@@ -635,19 +635,20 @@ function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, d
                 dealerHand.map(({ value }) => value).includes('K') ||
                 dealerHand.map(({ value }) => value).includes('Q') ||
                 dealerHand.map(({ value }) => value).includes('J')) {
-                document.getElementById('face-rule').style.visibility = 'visible';
-                document.getElementById('face-rule').style.opacity = '1';
+                introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
             }
         } else if (cardType === 'ace') {
             if (playerHand.map(({ value }) => value).includes('A') ||
                 dealerHand.map(({ value }) => value).includes('A')) {
-                document.getElementById('ace-rule').style.visibility = 'visible';
-                document.getElementById('ace-rule').style.opacity = '1';
+                introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
             }
         }
 
     }
 }
+
+// Initiate rule switches
+var ruleSet = {'face-rule': false, 'ace-rule': false, 'split-rule': false, 'double-rule': false, 'insurance-rule': false}
 
 // Could this be done with Array.concat(Array(6).fill().map((element, index) => index).forEach(constructDeck))?
 const deck_1 = constructDeck(1);

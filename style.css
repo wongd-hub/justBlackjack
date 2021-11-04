@@ -55,7 +55,6 @@ span.col-gree {
 }
 
 .page-title {
-    /* font-family: 'Noto Sans Mono', monospace; */
     font-weight: 900;
     font-size: 2em;
     justify-self: start;
@@ -212,6 +211,7 @@ li[class*='-rule'] {
     grid-area: 3 / 2 / span 1 / span 1;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .player-cards p {
@@ -286,6 +286,7 @@ li[class*='-rule'] {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .dealer-cards p {
@@ -362,4 +363,101 @@ li[class*='-rule'] {
 #remaining-cards {
     font-size: 0.7rem;
     font-weight: 300;
+}
+
+/* Media Queries */
+/*  Less wide screens (tablets perhaps) */
+@media only screen and (min-width: 963px) and (max-width: 1020px) {
+    div.quick-settings-box {
+        display: none;
+    }
+    
+    div.shoe {
+        grid-area: 4 / 1 / span 1 / span 1;
+        justify-content: center;
+        align-items: center;
+    }
+
+    div.shoe p {
+        margin: 0.03rem 0;
+    }
+
+    #remaining-cards {
+        padding-bottom: 2rem;
+    }
+
+    div.console {
+        display: none;
+    }
+
+    div.dealer-cards {
+        grid-area: 2 / 2 / span 1 / span 2;
+    }
+
+    div.player-cards {
+        grid-area: 3 / 2 / span 1 / span 2;
+    }
+
+    div.player-options {
+        grid-area: 4 / 2 / span 1 / span 2;
+    }
+}
+
+/*  Mobile Phones - nearly full re-design */
+@media only screen and (max-width: 962px) {
+    div.title-bar {
+        height: calc(50rem/16);
+        grid-area: 1 / 1 / span 1 / span 1;
+        grid-template-columns: 70% 30%;
+        margin: 0;
+        padding: 0;
+        align-items: center;
+    }
+
+    .player-options p[id*="-button"] {
+        font-size: 1.3rem;
+    }
+
+    h1.page-title {
+        font-size: 1.3rem;
+        padding-left: 0.5rem;
+    }
+
+    div.website-body {
+        grid-template: calc(50rem/16) 1.1fr 1.1fr 1fr / 1fr;
+        grid-gap: 0;
+        height: 100vh;
+        width: 100%;
+    }
+
+    p.dropdwn-btn {
+        padding: 0;
+        margin: calc(10rem/16);
+    }
+
+    div.side-bar {
+        display: none;
+    }
+
+    div.console, 
+    div.quick-settings-box,
+    div.shoe {
+        display: none;
+    }
+
+    h2[id*="-total"] {
+        font-size: 1.3rem;
+    }
+
+    div.dealer-cards {
+        grid-area: 2 / 1 / span 1 / span 1;
+    }
+
+    div.player-cards {
+        grid-area: 3 / 1 / span 1 / span 1;
+    }
+
+    div.player-options {
+        grid-area: 4 / 1 / span 1 / span 1;
+    }
 }
