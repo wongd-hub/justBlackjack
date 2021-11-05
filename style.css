@@ -327,7 +327,8 @@ li[class*='-rule'] {
 
 #double-button,
 #split-button,
-#next-round-button {
+#next-round-button,
+#insurance-button {
     display: none;
 }
 
