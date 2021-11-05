@@ -41,6 +41,14 @@ span.col-gree {
     color: #999999;
 }
 
+p.added-card {
+    opacity: 0;
+}
+
+p.added-card:hover {
+    opacity: 0.7 !important;
+}
+
 /* Page Title/Navbar */
 .title-bar {
     box-sizing: border-box;
@@ -110,6 +118,22 @@ span.col-gree {
     transition: all 200ms ease;
 }
 
+.dropdwn-content-mobile {
+    position: absolute;
+    opacity: 0;
+    z-index: 20;
+    /* background-color: #999999; */
+    color: #cccccc;
+    font-size: 2em;
+    text-decoration: none;
+    height: 0rem;
+    width: 85vw;
+    right: calc(20rem/16);
+    overflow: hidden;
+    padding: calc(5rem/16) calc(10rem/16);
+    transition: all 200ms ease;
+}
+
 /* 
     Using the method proposed here to get
     animation right: 
@@ -118,7 +142,7 @@ span.col-gree {
 .navbar-dropdown:hover .dropdwn-content {
     display: block;
     opacity: 1;
-    height: 8.5rem;
+    height: 6rem;
 }
 
 .navbar-dropdown:hover .dropdwn-btn {
@@ -135,11 +159,16 @@ span.col-gree {
     margin-right: calc(20rem/16);
 }
 
-.dropdwn-content ul {
+.dropdwn-content ul,
+.dropdwn-content-mobile ul {
     text-decoration: none;
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+.dropdwn-content-mobile ul {
+    padding-left: 0.3rem;
 }
 
 .dropdwn-content a {
@@ -150,7 +179,20 @@ span.col-gree {
     transition: all 200ms ease;
 }
 
-.dropdwn-content a:hover {
+.dropdwn-content-mobile a {
+    color: #cccccc;
+    font-size: 1.2rem;
+    line-height: 1.2rem;
+    text-decoration: none;    
+    transition: all 200ms ease;
+}
+
+div.dropdwn-content-mobile {
+    background: linear-gradient(35deg, rgb(47, 57, 65), rgb(50, 76, 99));
+}
+
+.dropdwn-content a:hover,
+.dropdwn-content-mobile a:hover {
     color: #cc99cc;
 }
 
@@ -159,23 +201,41 @@ span.col-gree {
     grid-area: 2 / 1 / span 2 / span 1;
 }
 
-.side-bar ul {
+#rules-copy {
+    height: 100%;
+}
+
+.side-bar ul,
+#rules-copy ul {
     position: relative;
     font-size: 1rem;
     font-weight: 300;
     list-style: none;
 }
 
-.side-bar ul li::before {
+.side-bar ul li::before,
+#rules-copy ul li::before {
     content: '>';
     position: absolute;
     left: 1rem;
 }
 
+#rules-copy ul li {
+    padding-left: 0.7rem;
+}
+
+#rules-copy ul li::before {
+    left: 0.1rem;
+}
+
+.dropdwn-content-mobile h2 {
+    font-size: 1.5rem;
+}
+
 li[class*='-rule'] {
     visibility: hidden;
     opacity: 0;
-    transition: visibility 0s, opacity 0.5s ease, color 500ms ease;
+    transition: opacity 0.5s ease, color 500ms ease;
 }
 
 /* Quick Settings Box */
@@ -226,7 +286,7 @@ li[class*='-rule'] {
 
 .player-cards p .bottom-pip {
     transform: scale(-1, -1);
-    display: inline-block;
+    /* display: inline-block; */
 }
 
 .player-cards p:hover {
@@ -259,22 +319,13 @@ li[class*='-rule'] {
     background: linear-gradient(35deg, rgba(47, 57, 65, 0.7), rgba(50, 76, 99, 0.7));
 }
 
-#hit-button {
-    display: inline;
-}
-
+#hit-button,
 #stand-button {
     display: inline;
 }
 
-#double-button {
-    display: none;
-}
-
-#split-button {
-    display: none;
-}
-
+#double-button,
+#split-button,
 #next-round-button {
     display: none;
 }
@@ -301,7 +352,8 @@ li[class*='-rule'] {
 
 .dealer-cards p .bottom-pip {
     transform: scale(-1, -1);
-    display: inline-block;
+    /* display: inline-block; */
+    z-index: -1;
 }
 
 .dealer-cards p:hover {
@@ -363,6 +415,10 @@ li[class*='-rule'] {
 #remaining-cards {
     font-size: 0.7rem;
     font-weight: 300;
+}
+
+#shoe-graphic:hover {
+    filter: blur(0.8px);
 }
 
 /* Media Queries */
@@ -431,8 +487,8 @@ li[class*='-rule'] {
     }
 
     p.dropdwn-btn {
-        padding: 0;
-        margin: calc(10rem/16);
+        padding: 0 calc(10rem/16);
+        /* margin: calc(10rem/16); */
     }
 
     div.side-bar {

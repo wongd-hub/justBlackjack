@@ -32,6 +32,20 @@ function constructDeck(deckNumber) {
 	return deck;
 }
 
+function fadeIn(element, timeToFade = 15) {
+    var op = 0.1;  // Initial opacity
+    element.style.display = 'block';
+    var timer = setInterval(function () {
+        console.log(`starting opacity loop for ${element.id}`)
+        if (op >= 1){
+            clearInterval(timer);
+        }
+        element.style.opacity = op;
+        element.style.filter = 'alpha(opacity=' + op * 100 + ")";
+        op += op * 0.1;
+    }, timeToFade);
+}
+
 function drawPlayerHand(playerHand) {
     var cardSelector =[];
     playerHand.forEach(function(x) { cardSelector.push(`${x.value}${x.suit}`) })
@@ -62,11 +76,20 @@ function updateConsole(update = 'No console update provided') {
 
 function introduceRule(rule, styleClass) {
     if (!ruleSet[styleClass]) {
-        document.getElementById('rule-set').innerHTML += `<li class="${styleClass}" id="${styleClass}">${rule}</li>`;
+        document.getElementById('rule-set').innerHTML += `<li id="${styleClass}" class="${styleClass}">${rule}</li>`;
         document.getElementById(styleClass).style.visibility = 'visible';
-        document.getElementById(styleClass).style.opacity = '1';
+        fadeIn(document.getElementById(styleClass));
         ruleSet[styleClass] = true;
+
+        // Also add to mobile list
+        document.getElementById('rules-copy').innerHTML += `<li class="${styleClass}">${rule}</li>`;
+        document.getElementById(styleClass).style.visibility = 'visible';
     }
+
+    // If multiple rules are introduced at once, the interval will mess up;
+    //  bandaid fix is to catch any rules that have no opacity and assign the correct opacity
+    document.querySelectorAll('li[class*=\'-rule\']').forEach(function(x) {if (x.style.opacity === '') { x.style.opacity = 1 }});
+
 }
 
 function addToPlayerHand(playerHand, playerHValue) {
@@ -79,7 +102,10 @@ function addToPlayerHand(playerHand, playerHValue) {
         // Lookup card graphic and insert at end of the card-holder div
         document.getElementById('ply-card-holder')
             .insertAdjacentHTML('beforeend', 
-                '<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === lastCardName })[0].cardEntity) + '</p>')
+                '<p id="new-card" class="added-card">' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === lastCardName })[0].cardEntity) + '</p>')
+
+        fadeIn(document.getElementById('new-card'));
+        document.getElementById('new-card').id = '';
 
         // Update total
         document.getElementById('player-total').innerHTML = `Your Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span>`;
@@ -123,7 +149,10 @@ function addToDealerHand(dealerHand, dealerHValue) {
         // Lookup card graphic and insert at end of the card-holder div
         document.getElementById('dlr-card-holder')
             .insertAdjacentHTML('beforeend', 
-                '<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === lastCardName })[0].cardEntity) + '</p>')
+                '<p id="new-card" class="added-card">' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === lastCardName })[0].cardEntity) + '</p>')
+
+        fadeIn(document.getElementById('new-card'));
+        document.getElementById('new-card').id = '';
 
         // Update total
         document.getElementById('dealer-total').innerHTML = `Dealer Total: <span class="col-emphasis">${calculateHValue(dealerHValue).postAceOptions.join(' / ')}</span>`;
@@ -223,7 +252,14 @@ function dealCards(shoe) {
     // Determine which buttons are available to user
     if (calculateHValue(playerHValue).initialState === 'blackjack') {
         if (calculateHValue(dealerHValue).initialState === 'blackjack') {
-            endOfRoundState();
+            // endOfRoundState();
+            readyForPlayerInput = false;
+
+            // Hide all buttons
+            document.getElementById('hit-button').style.display = "none";
+            document.getElementById('stand-button').style.display = "none";
+            document.getElementById('split-button').style.display = "none";
+            document.getElementById('double-button').style.display = "none";
             document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
             ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
@@ -231,7 +267,14 @@ function dealCards(shoe) {
             document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
             updateConsole('Both player and dealer have blackjack');
         } else {
-            endOfRoundState();
+            // endOfRoundState(); // NOT EVEN THIS WORKS - need to figure out why.
+            readyForPlayerInput = false;
+
+            // Hide all buttons
+            document.getElementById('hit-button').style.display = "none";
+            document.getElementById('stand-button').style.display = "none";
+            document.getElementById('split-button').style.display = "none";
+            document.getElementById('double-button').style.display = "none";
             document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
             ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
@@ -510,16 +553,18 @@ function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, ve
         // If dealer's options are lower than 17, dealer must hit until over 17 or bust
         } else if (Math.max.apply(null, dealerCurrentHand.postAceOptions.filter(obj => { return obj <= 21 })) < 17) {
             if (verbose) {console.log('Dealer\'s options max out under 17 - must hit')};
-            updateConsole('Dealer\'s options max out under 17 - must hit');
-            dealerHandtmp.push(shoe.shift());
-            dealerHValuetmp.push(dealerHandtmp[dealerHandtmp.length - 1].numericValue);
-            dealerCurrentHand = calculateHValue(dealerHValuetmp);
-            console.log(dealerHandtmp);
-            console.log(dealerHValuetmp);
-            addToDealerHand(dealerHandtmp, dealerHValuetmp);
-            updateShoeCount(shoe);
-            ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHandtmp);
-            ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHandtmp);
+
+                updateConsole('Dealer\'s options max out under 17 - must hit');
+                dealerHandtmp.push(shoe.shift());
+                dealerHValuetmp.push(dealerHandtmp[dealerHandtmp.length - 1].numericValue);
+                dealerCurrentHand = calculateHValue(dealerHValuetmp);
+                console.log(dealerHandtmp);
+                console.log(dealerHValuetmp);
+                addToDealerHand(dealerHandtmp, dealerHValuetmp);
+                updateShoeCount(shoe);
+                ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHandtmp);
+                ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHandtmp);
+
         }
     }
 
@@ -616,15 +661,11 @@ function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, d
                 playerHand.map(({ value }) => value).includes('J') ||
                 ['K', 'Q', 'J'].includes(dealerHand[0].value)) {
                 introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
-                // document.getElementById('face-rule').style.visibility = 'visible';
-                // document.getElementById('face-rule').style.opacity = '1';
             }
         } else if (cardType === 'ace') {
             if (playerHand.map(({ value }) => value).includes('A') ||
                 ['A'].includes(dealerHand[0].value)) {
                 introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
-                // document.getElementById('ace-rule').style.visibility = 'visible';
-                // document.getElementById('ace-rule').style.opacity = '1';
             }
         }
     } else {
@@ -649,6 +690,9 @@ function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, d
 
 // Initiate rule switches
 var ruleSet = {'face-rule': false, 'ace-rule': false, 'split-rule': false, 'double-rule': false, 'insurance-rule': false}
+
+// Set default timeout (in ms) for dealer turns
+var timeOut = 600;
 
 // Could this be done with Array.concat(Array(6).fill().map((element, index) => index).forEach(constructDeck))?
 const deck_1 = constructDeck(1);
@@ -832,3 +876,64 @@ document.getElementById('next-round-button').addEventListener('click', resetForN
 //   start dealerPlay to determine outcome.
 
 //  Will need to slightly rejig dealerPlay to handle the two hands if the player splits.
+
+setInterval(function () {
+
+    if (!window.matchMedia("(max-width: 962px)").matches) {
+        if (document.querySelector('.dropdwn-content-mobile').style.opacity != '' &&
+            document.querySelector('.dropdwn-content-mobile').style.height  != '') {
+                document.querySelector('.dropdwn-content-mobile').style.opacity = '';
+                document.querySelector('.dropdwn-content-mobile').style.height  = '';
+            }
+
+        if (document.querySelector('.dropdwn-btn').style.backgroundColor != '' &&
+            document.querySelector('.dropdwn-btn').style.color != '') {
+                document.querySelector('.dropdwn-btn').style.backgroundColor = '';
+                document.querySelector('.dropdwn-btn').style.color = '';
+            }
+
+        if (document.querySelector('.dropdwn-btn').innerHTML === 'rules +') {
+            document.querySelector('.dropdwn-btn').innerHTML = '+';
+            document.querySelector('.dropdwn-btn').style.fontSize = '';
+        }
+
+    } else {
+
+        // Change + to 'rules +'
+        document.querySelector('.dropdwn-btn').innerHTML = 'rules +';
+        document.querySelector('.dropdwn-btn').style.fontSize = '1.3rem';
+
+    }
+
+}, 100);
+
+
+// Media Queries
+//  If mobile, have top-right navbar be clickable - have a different side-bar open
+document.querySelector('.navbar-dropdown').onclick = function() {
+    if (window.matchMedia("(max-width: 962px)").matches === true) {
+        if (document.querySelector('.dropdwn-content-mobile').style.display === '' &&
+            document.querySelector('.dropdwn-content-mobile').style.opacity === '' &&
+            document.querySelector('.dropdwn-content-mobile').style.height === '') {
+
+                // Navbar
+                document.querySelector('.dropdwn-content-mobile').style.opacity = '1';
+                document.querySelector('.dropdwn-content-mobile').style.height  = '80vh';
+
+                // Button
+                document.querySelector('.dropdwn-btn').style.backgroundColor = '#999999';
+                document.querySelector('.dropdwn-btn').style.color = '#2d2d2d';
+
+            } else {
+
+                // Navbar
+                document.querySelector('.dropdwn-content-mobile').style.opacity = '';
+                document.querySelector('.dropdwn-content-mobile').style.height  = '';
+
+                // Button
+                document.querySelector('.dropdwn-btn').style.backgroundColor = '';
+                document.querySelector('.dropdwn-btn').style.color = '';
+
+            }
+    }
+}
