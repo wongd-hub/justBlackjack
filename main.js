@@ -228,11 +228,14 @@ function purgeHands() {
 function endOfRoundState() {
     readyForPlayerInput = false;
 
+    document.getElementById('next-round-button').style.display = 'inline';
+
     // Hide all buttons
     document.getElementById('hit-button').style.display = "none";
     document.getElementById('stand-button').style.display = "none";
     document.getElementById('split-button').style.display = "none";
     document.getElementById('double-button').style.display = "none";
+    document.getElementById('insurance-button').style.display = "none";
 
 }
 
@@ -261,6 +264,7 @@ function dealCards(shoe) {
     if (dealerHand[0].numericValue === 24601) {
         introduceRule('if the dealer\'s face-up card is an ace, insurance against the dealer having blackjack may be offered to the player', 'insurance-rule');
         updateConsole('Don\'t do it!');
+        document.getElementById('insurance-button').style.display = 'inline';
     }
 
     // Determine which buttons are available to user
@@ -337,10 +341,6 @@ function calculateHValue(HValueArray) {
     // Handle adding Aces.
     //  Since there's such a limited amount of combinations, there's probably no need to 
     //  pursue this programatically.
-    //  1 Ace: [(1, 11)]
-    //  2 Ace: [(1, 1), (1, 11), (11, 11)]
-    //  3 Ace: [(1, 1, 1), (1, 1, 11), (1, 11, 11), (11, 11, 11)]
-    //  4 Ace: [(1, 1, 1, 1), (1, 1, 1, 11), (1, 1, 11, 11), (1, 11, 11, 11), (11, 11, 11, 11)]
     if (aceCounter > 0) {
 
         switch (aceCounter) {
@@ -721,6 +721,30 @@ function updateScore(outcome) {
                 document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-emphasis"'>+0</span>`;
             }
         }
+    } else if (outcome === 'insurance-win' || outcome === 'i-w') {
+        scoreCount = scoreCount + 0.5;
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+0.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+0.5</span>`;
+            }
+        }
+    } else if (outcome === 'insurance-loss' || outcome === 'i-l') {
+        scoreCount = scoreCount - 0.5;
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-0.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-0.5</span>`;
+            }
+        }
     }
 
     fadeIn(document.getElementById('delta'), timeToFade = 20, removeElement = true);
@@ -850,7 +874,7 @@ document.getElementById('hit-button').addEventListener('click', function() {
             // Show next round button
             revealDealerSecondCard(dealerHand);
             endOfRoundState();
-            document.getElementById('next-round-button').style.display = 'inline';
+            // document.getElementById('next-round-button').style.display = 'inline';
 
         } else if (calculateHValue(playerHValuetmp).postAceOptions.includes(21)) {
             console.log('Player has blackjack'); 
@@ -871,7 +895,7 @@ document.getElementById('hit-button').addEventListener('click', function() {
 
             // Show next round button
             endOfRoundState();
-            document.getElementById('next-round-button').style.display = 'inline';
+            // document.getElementById('next-round-button').style.display = 'inline';
 
         } else {
             console.log('No bust, player can go again');
@@ -930,7 +954,7 @@ document.getElementById('stand-button').addEventListener('click', function() {
 
         }
 
-        document.getElementById('next-round-button').style.display = 'inline';
+        // document.getElementById('next-round-button').style.display = 'inline';
         endOfRoundState();
 
     } else { console.log('Game not ready for player input'); }
@@ -939,7 +963,36 @@ document.getElementById('stand-button').addEventListener('click', function() {
 
 document.getElementById('next-round-button').addEventListener('click', resetForNextRound);
 
+document.getElementById('insurance-button').addEventListener('click', function () {
+    readyForPlayerInput = false;
 
+    // If second dealer card is a face, then player gains 0.5 and dealer gets blackjack, so player loses
+    if (dealerHand[1].numericValue === 10) {
+        // Reveal dealer second card
+        revealDealerSecondCard(dealerHand);
+
+        // Win insurance
+        updateScore('i-w');
+
+        // Lose game
+        document.getElementById('player-total').innerHTML += ' <span class="col-oran">LOSE</span>';
+        updateScore('l');
+
+        endOfRoundState();
+
+    // If second dealer card is not a face, then player loses 0.5
+    } else {
+        // Lose insurance
+        updateScore('i-l');
+
+        document.getElementById('player-total').innerHTML += ' <span class="col-oran">INSURANCE LOST</span>';
+
+        // Hide insurance button and allow further action.
+        document.getElementById('insurance-button').style.display = 'none';
+        readyForPlayerInput = true;
+    }
+    
+})
 
 //    - Can we get animated graphics? D3; Chart.js; plotly.js?
 
