@@ -937,3 +937,18 @@ document.querySelector('.navbar-dropdown').onclick = function() {
             }
     }
 }
+
+document.querySelector('.navbar-dropdown').onmouseenter = function() {
+    if (!window.matchMedia('(max-width: 962px)').matches) {
+        document.querySelector('.navbar-dropdown .dropdwn-content').style.display = 'block';
+        document.querySelector('.navbar-dropdown .dropdwn-content').style.opacity = '1';
+        document.querySelector('.navbar-dropdown .dropdwn-content').style.height = '6rem';
+    }
+
+}
+
+document.querySelector('.navbar-dropdown').onmouseleave = function() {
+    document.querySelector('.navbar-dropdown .dropdwn-content').style.display = '';
+    document.querySelector('.navbar-dropdown .dropdwn-content').style.opacity = '';
+    document.querySelector('.navbar-dropdown .dropdwn-content').style.height = '';
+}
