@@ -220,19 +220,6 @@ function prepCardStringForHTML(cardElement, backing = false) {
         var t = 0;
         var tmp_1 = tmp.replace(/<span>/g, match => ++t === 1 ? '<span class="col-emphasis">' : match)
                 .replace(/<span>/g, '<span class="col-emphasis bottom-pip">');
-                // .replace(/\^/g, '<span class="card-backing">^</span>')
-                // .replace(/&&nbsp;/g, '<span class="card-backing">&</span>&nbsp;')
-                // .replace(/&\|/g, '<span class="card-backing">&</span>|')
-                // .replace(/o&nbsp;/g, '<span class="card-backing">o</span>&nbsp;')
-                // .replace(/o\|/g, '<span class="card-backing">o</span>|')
-                // .replace(/v/g, '<span class="card-backing">^</span>')
-                // .replace(/ww/g, '<span class="card-backing">ww</span>')
-                // .replace(/WW/g, '<span class="card-backing">WW</span>')
-                // .replace(/\(/g, '<span class="card-backing">(</span>')
-                // .replace(/\)/g, '<span class="card-backing">)</span>')
-                // .replace(/\{\)/g, '<span class="card-backing">{)</span>')
-                // .replace(/\{\(/g, '<span class="card-backing">{(</span>')
-                // .replace(/%)}/g, '<span class="card-backing">%</span>');
     
         return tmp_1;
     } else {
@@ -240,8 +227,86 @@ function prepCardStringForHTML(cardElement, backing = false) {
     }
 }
 
-function drawSmallerCards(hand) {
-    
+function drawCardStack(hand, orient = 'row', removeLastNCards = 0) {
+    var handTmp = hand.slice(0, hand.length - removeLastNCards);
+
+    if (handTmp.length === 1) {return null}
+
+    function pullFirstThreeChars(hand, index, orient = 'row') { 
+        return cardList
+            .filter(obj => {return obj.cardName === hand[index].value + hand[index].suit})[0]
+            .cardEntity
+            .split('<br>')
+            .map(function(el, i) { 
+                if (i === 0 && orient === 'diag') {
+                    return el
+                } else if (i === 1) {
+                    return el.slice(0, 16)
+                } else {
+                    return el.slice(0, 3)
+                }
+            });
+    }
+
+    if (orient === 'row') {
+
+        var leftSides = pullFirstThreeChars(handTmp, 0, 'row');
+
+        // Handle cards between first and last (if they exist)
+        for (let j = 1; j <= handTmp.length - 2; j++) {
+            var toAdd = pullFirstThreeChars(handTmp, j, 'row');
+            for (let k = 0; k <= leftSides.length - 1; k++) { leftSides[k] = leftSides[k] + toAdd[k]; }
+        }
+
+        // Add final card on
+        var finalCard = cardList
+            .filter(obj => {return obj.cardName === handTmp[handTmp.length - 1].value + handTmp[handTmp.length - 1].suit})[0]
+            .cardEntity
+            .split('<br>');
+
+        for (let j = 0; j <= leftSides.length - 1; j++) { leftSides[j] = leftSides[j] + finalCard[j]; }
+
+        return leftSides.join('<br>');
+
+    } else if (orient === 'diag') {
+
+        var leftSides = pullFirstThreeChars(handTmp, 0, 'diag');
+
+        // Handle cards between first and last (if they exist)
+        for (let j = 1; j <= handTmp.length - 2; j++) {
+            var toAdd = pullFirstThreeChars(handTmp, j, 'diag');
+            var len = leftSides.length;
+            for (let k = 0; k <= len; k++) { 
+                if (k >= j && k <= len - 1) {
+                    leftSides[k] = leftSides[k] + toAdd[k - j];
+                } else if (k === len) {
+                    leftSides[k] = '   '.repeat(j) + toAdd[k - j];
+                }    
+            }
+        }
+
+        // Add final card on
+        var finalCard = cardList
+            .filter(obj => {return obj.cardName === handTmp[handTmp.length - 1].value + handTmp[handTmp.length - 1].suit})[0]
+            .cardEntity
+            .split('<br>');
+
+        var len = leftSides.length;
+        for (let j = 0; j <= len; j++) { 
+            if (j >= handTmp.length - 1 && j <= len - 1) {
+                leftSides[j] = leftSides[j] + finalCard[j - handTmp.length + 1];
+            } else if (j === len) {
+                leftSides[j] = '   '.repeat(handTmp.length - 1) + finalCard[j - handTmp.length + 1];
+            }    
+        }
+
+        return leftSides.join('<br>');
+    }
 
 }
 
+// var test = prepCardStringForHTML(drawCardStack(playerHand, 'row'))
+// document.getElementById('dealer-cards').innerHTML = '<p>' + test + '</p>';
+
+// playerHand.push(shoe.shift());
+// document.getElementById('dealer-cards').innerHTML = '<p>' + prepCardStringForHTML(drawCardStack(playerHand, 'diag')) + '</p>';

@@ -36,7 +36,6 @@ function fadeIn(element, timeToFade = 15) {
     var op = 0.1;  // Initial opacity
     element.style.display = 'block';
     var timer = setInterval(function () {
-        console.log(`starting opacity loop for ${element.id}`)
         if (op >= 1){
             clearInterval(timer);
         }
@@ -95,6 +94,11 @@ function introduceRule(rule, styleClass) {
 function addToPlayerHand(playerHand, playerHValue) {
     // Only add if there is currently something in the graphic.
     if (document.getElementById('player-cards').innerHTML != '') {
+        // Get all cards except last one and put into a stack
+        var cardStack = prepCardStringForHTML(drawCardStack(playerHand, orient = 'diag', removeLastNCards = 1));
+
+        document.getElementById('ply-card-holder').innerHTML = '<p>' + cardStack + '</p>';
+
         // Get last card in hand
         var lastCard = playerHand[playerHand.length - 1];
         var lastCardName = `${lastCard.value}${lastCard.suit}`;
@@ -142,6 +146,11 @@ function revealDealerSecondCard(dealerHand) {
 function addToDealerHand(dealerHand, dealerHValue) {
     // Only add if there is currently something in the graphic.
     if (document.getElementById('dealer-cards').innerHTML != '') {
+        // Get all cards except last one and put into a stack
+        var cardStack = prepCardStringForHTML(drawCardStack(dealerHand, orient = 'diag', removeLastNCards = 1));
+
+        document.getElementById('dlr-card-holder').innerHTML = '<p>' + cardStack + '</p>';
+        
         // Get last card in hand
         var lastCard = dealerHand[dealerHand.length - 1];
         var lastCardName = `${lastCard.value}${lastCard.suit}`;
