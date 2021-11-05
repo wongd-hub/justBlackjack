@@ -423,6 +423,23 @@ li[class*='-rule'] {
     filter: blur(0.8px);
 }
 
+#score-counter {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#score-ticker-value {
+    padding-left: 1rem;
+}
+
+
+#delta {
+    opacity: 0;
+    padding-left: 1rem;
+}
+
 /* Media Queries */
 /*  Less wide screens (tablets perhaps) */
 @media only screen and (min-width: 963px) and (max-width: 1020px) {
