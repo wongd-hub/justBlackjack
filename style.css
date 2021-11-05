@@ -132,6 +132,8 @@ p.added-card:hover {
     overflow: hidden;
     padding: calc(5rem/16) calc(10rem/16);
     transition: all 200ms ease;
+    display: grid;
+    grid-template: 6rem 1fr / 1fr 1fr;
 }
 
 /* 
@@ -169,6 +171,7 @@ p.added-card:hover {
 
 .dropdwn-content-mobile ul {
     padding-left: 0.3rem;
+    grid-area: 1 / 1 / span 1 / span 1;
 }
 
 .dropdwn-content a {
@@ -199,10 +202,6 @@ div.dropdwn-content-mobile {
 /* Side-bar */
 .side-bar {
     grid-area: 2 / 1 / span 2 / span 1;
-}
-
-#rules-copy {
-    height: 100%;
 }
 
 .side-bar ul,
@@ -423,6 +422,23 @@ li[class*='-rule'] {
     filter: blur(0.8px);
 }
 
+#score-counter {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#score-ticker-value {
+    padding-left: 1rem;
+}
+
+
+#delta {
+    opacity: 0;
+    padding-left: 1rem;
+}
+
 /* Media Queries */
 /*  Less wide screens (tablets perhaps) */
 @media only screen and (min-width: 963px) and (max-width: 1020px) {
@@ -466,15 +482,33 @@ li[class*='-rule'] {
     div.title-bar {
         height: calc(50rem/16);
         grid-area: 1 / 1 / span 1 / span 1;
-        /* grid-template-columns: 60% 40%; */
+        grid-template-columns: 65% 35%;
         margin: 0;
         padding: 0;
         align-items: center;
     }
 
-    /* .bottom-pip {
-        z-index: -10;
-    } */
+    h1.page-title {
+        display: flex;
+    }
+
+    #rules-copy {
+        height: 100%;
+        grid-area: 2 / 1 / span 1 / span 2;
+    }
+    
+    #shoe-copy {
+        font-size: 1rem;
+        font-weight: 300;
+        grid-area: 1 / 2 / span 1 / span 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    #remaining-cards-2 {
+        font-size: 1rem;
+    }
 
     .player-options p[id*="-button"] {
         font-size: 1.3rem;

@@ -32,11 +32,12 @@ function constructDeck(deckNumber) {
 	return deck;
 }
 
-function fadeIn(element, timeToFade = 15) {
+function fadeIn(element, timeToFade = 15, removeElement = false) {
     var op = 0.1;  // Initial opacity
     element.style.display = 'block';
     var timer = setInterval(function () {
-        if (op >= 1){
+        if (op >= 1) {
+            if (removeElement) {element.parentNode.removeChild(element);}
             clearInterval(timer);
         }
         element.style.opacity = op;
@@ -62,6 +63,7 @@ function drawPlayerHand(playerHand) {
 
 function updateShoeCount(shoe) {
     document.getElementById('remaining-cards').innerHTML = `${shoe.length} cards remaining<br>${shoe.length - safetyCardPosition} until cut card`
+    document.getElementById('remaining-cards-2').innerHTML = `${shoe.length} cards remaining<br>${shoe.length - safetyCardPosition} until cut card`
 }
 
 function updateConsole(update = 'No console update provided') {
@@ -140,6 +142,9 @@ function revealDealerSecondCard(dealerHand) {
         document.getElementById('dealer-cards').insertAdjacentHTML('beforeend', 
             `<h2 class="dealer-total" id="dealer-total">Dealer Total: <span class="col-emphasis">${calculateHValue(dealerHValue).postAceOptions.join(' / ')}</span></h2>`);
     }
+
+    ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
+    ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
 
 }
 
@@ -271,11 +276,10 @@ function dealCards(shoe) {
             document.getElementById('double-button').style.display = "none";
             document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
-            ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
-            ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
             document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+            updateScore('draw');
             updateConsole('Both player and dealer have blackjack');
-        } else {
+        } else if (calculateHValue(dealerHValue).initialState != 'blackjack') {
             // endOfRoundState(); // NOT EVEN THIS WORKS - need to figure out why.
             readyForPlayerInput = false;
 
@@ -286,9 +290,8 @@ function dealCards(shoe) {
             document.getElementById('double-button').style.display = "none";
             document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
-            ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
-            ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
             document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
+            updateScore('b');
             updateConsole('Player has blackjack');
         }
     }
@@ -662,6 +665,71 @@ function performSim_stand(n, dealerHand, shoeForSim, numCardsAhead, verbose = fa
     return result;
 }
 
+function updateScore(outcome) {
+    console.log(`Score before update: ${scoreCount}`);
+    if (outcome === 'win' || outcome === 'w') {
+        scoreCount++
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+1</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1</span>`;
+            }
+        }
+
+    } else if (outcome === 'blackjack' || outcome === 'b') {
+        scoreCount = scoreCount + 1.5;
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1.5</span>`;
+            }
+        }
+
+    } else if (outcome === 'lose' || outcome === 'l') {
+        scoreCount--
+       
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-1</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-1</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-1</span>`;
+            }
+        }
+
+    } else if (outcome === 'draw' || outcome === 'd') {
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-emphasis"'>+0</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-emphasis"'>+0</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-emphasis"'>+0</span>`;
+            }
+        }
+    }
+
+    fadeIn(document.getElementById('delta'), timeToFade = 20, removeElement = true);
+
+    document.getElementById('score-ticker-value').innerHTML = scoreCount;
+    document.getElementById('score-ticker-value-2').innerHTML = scoreCount;
+    console.log(`Score after update: ${scoreCount}`);
+}
+
 function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, dealerHand) {
     if (beforeDealReveal) {
         if (cardType === 'face') {
@@ -699,6 +767,9 @@ function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, d
 
 // Initiate rule switches
 var ruleSet = {'face-rule': false, 'ace-rule': false, 'split-rule': false, 'double-rule': false, 'insurance-rule': false}
+
+// Initialise score counter
+var scoreCount = 0;
 
 // Set default timeout (in ms) for dealer turns
 var timeOut = 600;
@@ -771,6 +842,7 @@ document.getElementById('hit-button').addEventListener('click', function() {
         if (Math.min.apply(null, calculateHValue(playerHValuetmp).postAceOptions) > 21) {
             console.log('Player has gone bust'); updateConsole('Player has gone bust');
             document.getElementById('player-total').innerHTML += ' <span class="col-oran">BUST</span>';
+            updateScore('lose');
 
             playerHand = playerHandtmp;
             playerHValue = playerHValuetmp;
@@ -786,11 +858,13 @@ document.getElementById('hit-button').addEventListener('click', function() {
             if (calculateHValue(dealerHValue).initialState === 'blackjack') {
                 revealDealerSecondCard(dealerHand);
                 document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                updateScore('draw');
                 console.log('Both player and dealer have blackjack');
                 updateConsole('Both player and dealer have blackjack');
             } else {
                 revealDealerSecondCard(dealerHand);
                 document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
+                updateScore('b');
                 console.log('Player has blackjack');
                 updateConsole('Player has blackjack');
             }
@@ -832,24 +906,25 @@ document.getElementById('stand-button').addEventListener('click', function() {
         //   Dealer hits until 17
         //    Either bust or under 21 and beats player
         revealDealerSecondCard(dealerHand);
-        ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHandtmp, dealerHand);
-        ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHandtmp, dealerHand);
         var dealerResult = dealerPlay(shoe, playerHandtmp, playerHValuetmp, dealerHandtmp, dealerHValuetmp, verbose = true);
 
         switch(dealerResult.outcome) {
             case 'win':
                 console.log('Player wins');
                 document.getElementById('player-total').innerHTML += ' <span class="col-gree">WIN</span>';
+                updateScore('win');
                 updateConsole('Player wins');
                 break;
             case 'lose':
                 console.log('Player loses');
                 document.getElementById('player-total').innerHTML += ' <span class="col-oran">LOSE</span>';
+                updateScore('lose');
                 updateConsole('Player loses');
                 break;
             case 'draw':
                 console.log('Draw');
                 document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                updateScore('draw');
                 updateConsole('Draw');
                 break;
 
