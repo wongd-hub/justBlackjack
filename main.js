@@ -63,6 +63,7 @@ function drawPlayerHand(playerHand) {
 
 function updateShoeCount(shoe) {
     document.getElementById('remaining-cards').innerHTML = `${shoe.length} cards remaining<br>${shoe.length - safetyCardPosition} until cut card`
+    document.getElementById('remaining-cards-2').innerHTML = `${shoe.length} cards remaining<br>${shoe.length - safetyCardPosition} until cut card`
 }
 
 function updateConsole(update = 'No console update provided') {
@@ -668,22 +669,64 @@ function updateScore(outcome) {
     console.log(`Score before update: ${scoreCount}`);
     if (outcome === 'win' || outcome === 'w') {
         scoreCount++
-        document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1</span>`;
-        fadeIn(document.getElementById('delta'), timeToFade = 15, removeElement = true);
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+1</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1</span>`;
+            }
+        }
+
     } else if (outcome === 'blackjack' || outcome === 'b') {
         scoreCount = scoreCount + 1.5;
-        document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1.5</span>`;
-        fadeIn(document.getElementById('delta'), timeToFade = 15, removeElement = true);
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1.5</span>`;
+            }
+        }
+
     } else if (outcome === 'lose' || outcome === 'l') {
         scoreCount--
-        document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-1</span>`;
-        fadeIn(document.getElementById('delta'), timeToFade = 15, removeElement = true);
+       
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-1</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-1</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-1</span>`;
+            }
+        }
+
     } else if (outcome === 'draw' || outcome === 'd') {
-        document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-emphasis"'>+0</span>`;
-        fadeIn(document.getElementById('delta'), timeToFade = 15, removeElement = true);
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-emphasis"'>+0</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-emphasis"'>+0</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-emphasis"'>+0</span>`;
+            }
+        }
     }
 
+    fadeIn(document.getElementById('delta'), timeToFade = 20, removeElement = true);
+
     document.getElementById('score-ticker-value').innerHTML = scoreCount;
+    document.getElementById('score-ticker-value-2').innerHTML = scoreCount;
     console.log(`Score after update: ${scoreCount}`);
 }
 
