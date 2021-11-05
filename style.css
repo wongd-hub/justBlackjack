@@ -257,9 +257,6 @@ li[class*='-rule'] {
     padding: 0;
 }
 
-
-
-
 /* Player Cards */
 .card-holder {
     display: flex;
@@ -284,10 +281,10 @@ li[class*='-rule'] {
     color: #999999;
 }
 
-.player-cards p .bottom-pip {
+/* .player-cards p .bottom-pip {
     transform: scale(-1, -1);
-    /* display: inline-block; */
-}
+    display: inline-block; 
+} */
 
 .player-cards p:hover {
     opacity: 0.7;
@@ -301,10 +298,15 @@ li[class*='-rule'] {
     align-items: center;
 }
 
+.player-total,
+.dealer-total {
+    text-align: center;
+}
+
 .player-options p[id*="-button"] {
     font-size: 2em;
     padding: 1rem;
-    transition: color 250ms ease, background 500ms ease;
+    transition: color 250ms ease/*, background 500ms ease*/;
     background: linear-gradient(35deg, rgba(47, 57, 65, 0.3), rgba(50, 76, 99, 0.3));
     -webkit-user-select: none; /* Safari */        
     -moz-user-select: none; /* Firefox */
@@ -350,11 +352,11 @@ li[class*='-rule'] {
     color: #999999;
 }
 
-.dealer-cards p .bottom-pip {
+/* .dealer-cards p .bottom-pip {
     transform: scale(-1, -1);
-    /* display: inline-block; */
+    display: inline-block;
     z-index: -1;
-}
+} */
 
 .dealer-cards p:hover {
     opacity: 0.7;
@@ -469,6 +471,10 @@ li[class*='-rule'] {
         padding: 0;
         align-items: center;
     }
+
+    /* .bottom-pip {
+        z-index: -10;
+    } */
 
     .player-options p[id*="-button"] {
         font-size: 1.3rem;
