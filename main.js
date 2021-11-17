@@ -36,8 +36,8 @@ function fadeIn(element, timeToFade = 15, removeElement = false) {
     var op = 0.1;  // Initial opacity
     element.style.display = 'block';
     var timer = setInterval(function () {
-        if (op >= 1) {
-            if (removeElement) {element.parentNode.removeChild(element);}
+        if (op >= 1) { // Check if element is null or not as well to avoid infinite loops
+            if (removeElement && element.parentNode) {element.parentNode.removeChild(element);}
             clearInterval(timer);
         }
         element.style.opacity = op;
@@ -67,6 +67,7 @@ function updateShoeCount(shoe) {
 }
 
 function updateConsole(update = 'No console update provided') {
+    console.log(update);
     var parentElement = document.getElementById('blinker').parentNode;
     var newMessage = document.createElement('p');
 
@@ -270,7 +271,6 @@ function dealCards(shoe) {
     // Determine which buttons are available to user
     if (calculateHValue(playerHValue).initialState === 'blackjack') {
         if (calculateHValue(dealerHValue).initialState === 'blackjack') {
-            // endOfRoundState();
             readyForPlayerInput = false;
 
             // Hide all buttons
@@ -284,7 +284,6 @@ function dealCards(shoe) {
             updateScore('draw');
             updateConsole('Both player and dealer have blackjack');
         } else if (calculateHValue(dealerHValue).initialState != 'blackjack') {
-            // endOfRoundState(); // NOT EVEN THIS WORKS - need to figure out why.
             readyForPlayerInput = false;
 
             // Hide all buttons
@@ -745,6 +744,48 @@ function updateScore(outcome) {
                 document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-0.5</span>`;
             }
         }
+    } else if (outcome === 'win-double' || outcome === 'w-d') {
+        scoreCount = scoreCount + 2
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+2</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+2</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+2</span>`;
+            }
+        }
+
+    } else if (outcome === 'blackjack-double' || outcome === 'b-d') {
+        scoreCount = scoreCount + 3;
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+3</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+3</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+3</span>`;
+            }
+        }
+
+    } else if (outcome === 'lose-double' || outcome === 'l-d') {
+        scoreCount = scoreCount - 2
+       
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-2</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-2</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-2</span>`;
+            }
+        }
+
     }
 
     fadeIn(document.getElementById('delta'), timeToFade = 20, removeElement = true);
@@ -797,6 +838,9 @@ var scoreCount = 0;
 
 // Set default timeout (in ms) for dealer turns
 var timeOut = 600;
+
+// Initialise hand counter - this comes into play when there is a split
+var handsInPlay = 1;
 
 // Could this be done with Array.concat(Array(6).fill().map((element, index) => index).forEach(constructDeck))?
 const deck_1 = constructDeck(1);
@@ -913,7 +957,7 @@ document.getElementById('hit-button').addEventListener('click', function() {
 
 document.getElementById('stand-button').addEventListener('click', function() {
 
-    if (readyForPlayerInput) { // Also add the shoe.length > ... here?
+    if (readyForPlayerInput) {
 
         // Copy off the hand so the original hand is unmodified
         var playerHandtmp = JSON.parse(JSON.stringify(playerHand));
@@ -993,6 +1037,114 @@ document.getElementById('insurance-button').addEventListener('click', function (
     }
     
 })
+
+// A lot of the logic for this is copied from the hit and stand buttons since 
+// this is essentially just a hit then an immediate stand.
+document.getElementById('double-button').addEventListener('click', function () {
+
+    // Upon doubling, the player will get exactly one more card face up with no more options to play.
+    // This can only be done when the player has two cards.
+    // Only difficulty is when to allow players to double - some casinos allow only 9-11 sums; some allow all.
+
+    if (readyForPlayerInput) {
+
+        // Copy off the hand so the original hand is unmodified
+        var playerHandtmp = JSON.parse(JSON.stringify(playerHand));
+        var playerHValuetmp = JSON.parse(JSON.stringify(playerHValue));
+        var dealerHandtmp = JSON.parse(JSON.stringify(dealerHand));
+        var dealerHValuetmp = JSON.parse(JSON.stringify(dealerHValue));
+
+        playerInputForRound = 'double';
+        console.log('Player has chosen to double'); updateConsole('Player has chosen to double');
+        readyForPlayerInput = false;
+
+        // Player gets one extra card; will need to transfer a card from the shoe into their hand
+        //  and re-calculate their hand value.
+        playerHandtmp.push(shoe.shift());
+        playerHValuetmp.push(playerHandtmp[playerHandtmp.length - 1].numericValue);
+        console.log(playerHandtmp);
+        addToPlayerHand(playerHandtmp, playerHValuetmp); // Draw graphic
+        updateShoeCount(shoe);
+        ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHandtmp, dealerHand);
+        ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHandtmp, dealerHand);
+
+        // Check if their hand exceeds 21; if it does, then the hand is bust; reset the round
+        if (Math.min.apply(null, calculateHValue(playerHValuetmp).postAceOptions) > 21) {
+            console.log('Player has gone bust'); updateConsole('Player has gone bust');
+            document.getElementById('player-total').innerHTML += ' <span class="col-oran">BUST ×2</span>';
+            updateScore('l-d');
+
+            playerHand = playerHandtmp;
+            playerHValue = playerHValuetmp;
+
+            // Show next round button
+            revealDealerSecondCard(dealerHand);
+            endOfRoundState();
+            // document.getElementById('next-round-button').style.display = 'inline';
+
+        } else if (calculateHValue(playerHValuetmp).postAceOptions.includes(21)) {
+            console.log('Player has blackjack'); 
+
+            if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+                revealDealerSecondCard(dealerHand);
+                document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                updateScore('draw');
+                console.log('Both player and dealer have blackjack');
+                updateConsole('Both player and dealer have blackjack');
+            } else {
+                revealDealerSecondCard(dealerHand);
+                document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK ×2</span>';
+                updateScore('b-d');
+                console.log('Player has blackjack');
+                updateConsole('Player has blackjack');
+            }
+
+            // Show next round button
+            endOfRoundState();
+            // document.getElementById('next-round-button').style.display = 'inline';
+
+        } else {
+
+            // Make the dealer immediately play in the event that the player has not gone bust.
+            updateConsole('Player sum under 21, but player has doubled. Dealer\'s turn.');
+
+            // If player stands, transfer to dealer's turn
+            //   Reveal dealer's second card
+            //   Dealer hits until 17
+            //    Either bust or under 21 and beats player
+            revealDealerSecondCard(dealerHand);
+            var dealerResult = dealerPlay(shoe, playerHandtmp, playerHValuetmp, dealerHandtmp, dealerHValuetmp, verbose = true);
+
+            switch(dealerResult.outcome) {
+                case 'win':
+                    console.log('Player wins');
+                    document.getElementById('player-total').innerHTML += ' <span class="col-gree">WIN</span>';
+                    updateScore('w-d');
+                    updateConsole('Player wins, winnings doubled');
+                    break;
+                case 'lose':
+                    console.log('Player loses');
+                    document.getElementById('player-total').innerHTML += ' <span class="col-oran">LOSE</span>';
+                    updateScore('l-d');
+                    updateConsole('Player loses, losses doubled');
+                    break;
+                case 'draw':
+                    console.log('Draw');
+                    document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                    updateScore('draw');
+                    updateConsole('Draw');
+                    break;
+
+            }
+
+            endOfRoundState();
+
+        }
+
+    } else { console.log('Game not ready for player input'); }
+
+})
+
 
 //    - Can we get animated graphics? D3; Chart.js; plotly.js?
 
