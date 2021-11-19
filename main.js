@@ -1,37 +1,4 @@
-// Initialise dealer hand
-var dealerHand = [];
-var dealerHValue = [];
-
-// Initialise player hand
-var playerHand = [];
-var playerHValue = [];
-
-// Initialise discard rack
-var discardRack = [];
-
-// Initialise model of a card deck, with values included
-//  Code based on this source https://www.thatsoftwaredude.com/content/6196/coding-a-card-deck-in-javascript
-const suits = ["spades", "diamonds", "clubs", "hearts"];
-const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
-
-function constructDeck(deckNumber) {
-	let deck = new Array();
-	for(let i = 0; i < suits.length; i++) {
-		for(let x = 0; x < values.length; x++) {
-            var card
-            if (!isNaN(values[x])) {
-                card = {value: values[x], suit: suits[i], numericValue: parseInt(values[x]), deckNumber: deckNumber};
-            } else if (values[x] === "J" | values[x] === "Q" | values[x] === "K") {
-                card = {value: values[x], suit: suits[i], numericValue: 10, deckNumber: deckNumber};
-            } else if (values[x] === "A") {
-                card = {value: values[x], suit: suits[i], numericValue: 24601, deckNumber: deckNumber};
-            }
-			deck.push(card);
-		}
-	}
-	return deck;
-}
-
+// #region Graphical utility functions ========================================
 function fadeIn(element, timeToFade = 15, removeElement = false) {
     var op = 0.1;  // Initial opacity
     element.style.display = 'block';
@@ -151,6 +118,172 @@ function drawDealerHand(dealerHand) {
     document.getElementById('dealer-cards').innerHTML = '<div class="card-holder" id="dlr-card-holder">' + cardsToDisplay.join('') + '</div>';
 }
 
+function updateScore(outcome) {
+    console.log(`Score before update: ${scoreCount}`);
+    if (outcome === 'win' || outcome === 'w') {
+        scoreCount++
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+1</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1</span>`;
+            }
+        }
+
+    } else if (outcome === 'blackjack' || outcome === 'b') {
+        scoreCount = scoreCount + 1.5;
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1.5</span>`;
+            }
+        }
+
+    } else if (outcome === 'lose' || outcome === 'l') {
+        scoreCount--
+       
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-1</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-1</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-1</span>`;
+            }
+        }
+
+    } else if (outcome === 'draw' || outcome === 'd') {
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-emphasis"'>+0</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-emphasis"'>+0</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-emphasis"'>+0</span>`;
+            }
+        }
+    } else if (outcome === 'insurance-win' || outcome === 'i-w') {
+        scoreCount = scoreCount + 0.5;
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+0.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+0.5</span>`;
+            }
+        }
+    } else if (outcome === 'insurance-loss' || outcome === 'i-l') {
+        scoreCount = scoreCount - 0.5;
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-0.5</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-0.5</span>`;
+            }
+        }
+    } else if (outcome === 'win-double' || outcome === 'w-d') {
+        scoreCount = scoreCount + 2
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+2</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+2</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+2</span>`;
+            }
+        }
+
+    } else if (outcome === 'blackjack-double' || outcome === 'b-d') {
+        scoreCount = scoreCount + 3;
+
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+3</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+3</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+3</span>`;
+            }
+        }
+
+    } else if (outcome === 'lose-double' || outcome === 'l-d') {
+        scoreCount = scoreCount - 2
+       
+        if (!window.matchMedia("(max-width: 962px)").matches) {
+            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-2</span>`;
+        } else {
+            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
+                var t = 0;
+                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-2</span>` : match)
+            } else {
+                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-2</span>`;
+            }
+        }
+
+    }
+
+    fadeIn(document.getElementById('delta'), timeToFade = 20, removeElement = true);
+
+    document.getElementById('score-ticker-value').innerHTML = scoreCount;
+    document.getElementById('score-ticker-value-2').innerHTML = scoreCount;
+    console.log(`Score after update: ${scoreCount}`);
+}
+
+function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, dealerHand) {
+    if (beforeDealReveal) {
+        if (cardType === 'face') {
+            if (playerHand.map(({ value }) => value).includes('K') ||
+                playerHand.map(({ value }) => value).includes('Q') ||
+                playerHand.map(({ value }) => value).includes('J') ||
+                ['K', 'Q', 'J'].includes(dealerHand[0].value)) {
+                introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
+            }
+        } else if (cardType === 'ace') {
+            if (playerHand.map(({ value }) => value).includes('A') ||
+                ['A'].includes(dealerHand[0].value)) {
+                introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
+            }
+        }
+    } else {
+        if (cardType === 'face') {
+            if (playerHand.map(({ value }) => value).includes('K') ||
+                playerHand.map(({ value }) => value).includes('Q') ||
+                playerHand.map(({ value }) => value).includes('J') ||
+                dealerHand.map(({ value }) => value).includes('K') ||
+                dealerHand.map(({ value }) => value).includes('Q') ||
+                dealerHand.map(({ value }) => value).includes('J')) {
+                introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
+            }
+        } else if (cardType === 'ace') {
+            if (playerHand.map(({ value }) => value).includes('A') ||
+                dealerHand.map(({ value }) => value).includes('A')) {
+                introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
+            }
+        }
+
+    }
+}
+
 function revealDealerSecondCard(dealerHand) {
 
     // Only do this if the dealer has two cards currently and the card hasn't been flipped yet
@@ -168,6 +301,26 @@ function revealDealerSecondCard(dealerHand) {
     ruleFAceCards(cardType = 'face', beforeDealReveal = false, playerHand, dealerHand);
     ruleFAceCards(cardType = 'ace', beforeDealReveal = false, playerHand, dealerHand);
 
+}
+// #endregion
+
+// #region Core game functions ========================================
+function constructDeck(deckNumber) {
+	let deck = new Array();
+	for(let i = 0; i < suits.length; i++) {
+		for(let x = 0; x < values.length; x++) {
+            var card
+            if (!isNaN(values[x])) {
+                card = {value: values[x], suit: suits[i], numericValue: parseInt(values[x]), deckNumber: deckNumber};
+            } else if (values[x] === "J" | values[x] === "Q" | values[x] === "K") {
+                card = {value: values[x], suit: suits[i], numericValue: 10, deckNumber: deckNumber};
+            } else if (values[x] === "A") {
+                card = {value: values[x], suit: suits[i], numericValue: 24601, deckNumber: deckNumber};
+            }
+			deck.push(card);
+		}
+	}
+	return deck;
 }
 
 function addToDealerHand(dealerHand, dealerHValue) {
@@ -663,7 +816,9 @@ function resetForNextRound() {
 
     readyForPlayerInput = true;
 }
+// #endregion
 
+// #region Simulation functions  ========================================
 // Retain dealer's first card and the next x - 1 cards in shoe for simulation. 
 // Shuffle forwardShoe, deal first card to dealer's hand, simulate a round
 //  Retain win/loss/draw status
@@ -704,172 +859,24 @@ function performSim_stand(n, dealerHand, shoeForSim, numCardsAhead, verbose = fa
 
     return result;
 }
+// #endregion
 
-function updateScore(outcome) {
-    console.log(`Score before update: ${scoreCount}`);
-    if (outcome === 'win' || outcome === 'w') {
-        scoreCount++
+// #region Initial variable setup =========================
+// Initialise dealer hand
+var dealerHand = [];
+var dealerHValue = [];
 
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+1</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1</span>`;
-            }
-        }
+// Initialise player hand
+var playerHand = [];
+var playerHValue = [];
 
-    } else if (outcome === 'blackjack' || outcome === 'b') {
-        scoreCount = scoreCount + 1.5;
+// Initialise discard rack
+var discardRack = [];
 
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+1.5</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+1.5</span>`;
-            }
-        }
-
-    } else if (outcome === 'lose' || outcome === 'l') {
-        scoreCount--
-       
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-1</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-1</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-1</span>`;
-            }
-        }
-
-    } else if (outcome === 'draw' || outcome === 'd') {
-
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-emphasis"'>+0</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-emphasis"'>+0</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-emphasis"'>+0</span>`;
-            }
-        }
-    } else if (outcome === 'insurance-win' || outcome === 'i-w') {
-        scoreCount = scoreCount + 0.5;
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+0.5</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+0.5</span>`;
-            }
-        }
-    } else if (outcome === 'insurance-loss' || outcome === 'i-l') {
-        scoreCount = scoreCount - 0.5;
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-0.5</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+1.5</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-0.5</span>`;
-            }
-        }
-    } else if (outcome === 'win-double' || outcome === 'w-d') {
-        scoreCount = scoreCount + 2
-
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+2</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? `<span id="delta" class="col-gree"'>+2</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+2</span>`;
-            }
-        }
-
-    } else if (outcome === 'blackjack-double' || outcome === 'b-d') {
-        scoreCount = scoreCount + 3;
-
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-gree"'>+3</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-gree"'>+3</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-gree"'>+3</span>`;
-            }
-        }
-
-    } else if (outcome === 'lose-double' || outcome === 'l-d') {
-        scoreCount = scoreCount - 2
-       
-        if (!window.matchMedia("(max-width: 962px)").matches) {
-            document.getElementById('score-counter').innerHTML += ` <span id="delta" class="col-oran"'>-2</span>`;
-        } else {
-            if ((document.querySelector('.page-title').innerHTML.match(/\n/g) || []).length === 2) {
-                var t = 0;
-                document.querySelector('.page-title').innerHTML = document.querySelector('.page-title').innerHTML.replace(/\n/g, match => ++t === 2 ? ` <span id="delta" class="col-oran"'>-2</span>` : match)
-            } else {
-                document.querySelector('.page-title').innerHTML += `<span id="delta" class="col-oran"'>-2</span>`;
-            }
-        }
-
-    }
-
-    fadeIn(document.getElementById('delta'), timeToFade = 20, removeElement = true);
-
-    document.getElementById('score-ticker-value').innerHTML = scoreCount;
-    document.getElementById('score-ticker-value-2').innerHTML = scoreCount;
-    console.log(`Score after update: ${scoreCount}`);
-}
-
-function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, dealerHand) {
-    if (beforeDealReveal) {
-        if (cardType === 'face') {
-            if (playerHand.map(({ value }) => value).includes('K') ||
-                playerHand.map(({ value }) => value).includes('Q') ||
-                playerHand.map(({ value }) => value).includes('J') ||
-                ['K', 'Q', 'J'].includes(dealerHand[0].value)) {
-                introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
-            }
-        } else if (cardType === 'ace') {
-            if (playerHand.map(({ value }) => value).includes('A') ||
-                ['A'].includes(dealerHand[0].value)) {
-                introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
-            }
-        }
-    } else {
-        if (cardType === 'face') {
-            if (playerHand.map(({ value }) => value).includes('K') ||
-                playerHand.map(({ value }) => value).includes('Q') ||
-                playerHand.map(({ value }) => value).includes('J') ||
-                dealerHand.map(({ value }) => value).includes('K') ||
-                dealerHand.map(({ value }) => value).includes('Q') ||
-                dealerHand.map(({ value }) => value).includes('J')) {
-                introduceRule('face cards are worth <span class="col-emphasis">10</span>', 'face-rule');
-            }
-        } else if (cardType === 'ace') {
-            if (playerHand.map(({ value }) => value).includes('A') ||
-                dealerHand.map(({ value }) => value).includes('A')) {
-                introduceRule('aces are worth <span class="col-emphasis">1</span> or <span class="col-emphasis">11</span>', 'ace-rule');
-            }
-        }
-
-    }
-}
+// Initialise model of a card deck, with values included
+//  Code based on this source https://www.thatsoftwaredude.com/content/6196/coding-a-card-deck-in-javascript
+const suits = ["spades", "diamonds", "clubs", "hearts"];
+const values = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
 
 // Initiate rule switches
 var ruleSet = {
@@ -924,6 +931,7 @@ var faceRuleSwitch = false;
 var aceRuleSwitch = false;
 var playerInputForRound = 'none';
 var readyForPlayerInput = true;
+// #endregion
 
 initiateDeckSetup(shoe);
 updateConsole('Top card discarded; ready to play')
