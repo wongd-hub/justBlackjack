@@ -46,7 +46,7 @@ function fadeIn(element, timeToFade = 15, removeElement = false) {
     }, timeToFade);
 }
 
-function drawPlayerHand(playerHand) {
+function drawPlayerHand(playerHand, yourSub = "Your") {
     var cardSelector =[];
     playerHand.forEach(function(x) { cardSelector.push(`${x.value}${x.suit}`) })
 
@@ -55,10 +55,26 @@ function drawPlayerHand(playerHand) {
         cardsToDisplay.push('<p>' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === cardSelector[i] })[0].cardEntity) + '</p>')
     }
 
-    document.getElementById('player-cards').innerHTML = '<div class="card-holder" id="ply-card-holder">' + cardsToDisplay.join('') + '</div>';
+    if (splitMode) {
+
+        document.getElementById('player-cards').innerHTML = '<div class="card-holder" id="ply-card-holder">' + cardsToDisplay[0] + '</div>';
+
+        // Lookup card graphic and insert second card at end of the card-holder div
+        document.getElementById('ply-card-holder')
+            .insertAdjacentHTML('beforeend', 
+                '<p id="new-card" class="added-card">' + prepCardStringForHTML(cardList.filter(obj => { return obj.cardName === cardSelector[1] })[0].cardEntity) + '</p>')
+
+        fadeIn(document.getElementById('new-card'));
+        document.getElementById('new-card').id = '';
+   
+    } else {
+
+        document.getElementById('player-cards').innerHTML = '<div class="card-holder" id="ply-card-holder">' + cardsToDisplay.join('') + '</div>';
+    }
+
     document.getElementById('player-cards')
         .insertAdjacentHTML('beforeend', 
-            `<h2 class="player-total" id="player-total">Your Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span></h2>`)
+            `<h2 class="player-total" id="player-total">${yourSub} Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span></h2>`)
 }
 
 function updateShoeCount(shoe) {
@@ -84,8 +100,8 @@ function introduceRule(rule, styleClass) {
         ruleSet[styleClass] = true;
 
         // Also add to mobile list
-        document.getElementById('rules-copy').innerHTML += `<li class="${styleClass}">${rule}</li>`;
-        document.getElementById(styleClass).style.visibility = 'visible';
+        document.getElementById('rule-2').innerHTML += `<li id="${styleClass + '2'}" class="${styleClass}">${rule}</li>`;
+        document.getElementById(styleClass + '2').style.visibility = 'visible';
     }
 
     // If multiple rules are introduced at once, the interval will mess up;
@@ -115,7 +131,12 @@ function addToPlayerHand(playerHand, playerHValue) {
         document.getElementById('new-card').id = '';
 
         // Update total
-        document.getElementById('player-total').innerHTML = `Your Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span>`;
+        if (splitMode) {
+            document.getElementById('player-total').innerHTML = `Hand ${handCurrentlyInPlay + 1}/${handsInPlay} Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span>`;
+        } else {
+            document.getElementById('player-total').innerHTML = `Your Total: <span class="col-emphasis">${calculateHValue(playerHValue).postAceOptions.join(' / ')}</span>`;
+        }
+        
     }
 }
 
@@ -226,7 +247,35 @@ function purgeHands() {
     // document.getElementById('dealer-total').innerHTML = '';
 }
 
-function endOfRoundState() {
+function endOfRoundState(playerSplit = false) {
+
+    if (splitMode) {
+        // If the round has ended on the last hand, close split mode
+        //  else, iterate handCurrentlyInPlay by one
+        if (handCurrentlyInPlay + 1 === handsInPlay) {
+            splitMode = false;
+            handsInPlayArr = [];
+            handsInPlay = 1;
+            handCurrentlyInPlay = 0;
+
+            // Change next_hand button back to next_round
+            document.getElementById('next-round-button').innerHTML = 'next_round';
+
+        } else {
+
+            // Change next_hand button back to next_round
+            document.getElementById('next-round-button').innerHTML = 'next_hand';
+
+            if (playerSplit) {
+                // If player split this round, do not change handCurrentlyInPlay,
+                //  make them go back to the hand they started on originally for the split.
+            } else {
+                handCurrentlyInPlay++
+            }
+        }
+
+
+    }
     readyForPlayerInput = false;
 
     document.getElementById('next-round-button').style.display = 'inline';
@@ -271,35 +320,21 @@ function dealCards(shoe) {
     // Determine which buttons are available to user
     if (calculateHValue(playerHValue).initialState === 'blackjack') {
         if (calculateHValue(dealerHValue).initialState === 'blackjack') {
-            readyForPlayerInput = false;
-
-            // Hide all buttons
-            document.getElementById('hit-button').style.display = "none";
-            document.getElementById('stand-button').style.display = "none";
-            document.getElementById('split-button').style.display = "none";
-            document.getElementById('double-button').style.display = "none";
-            document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
             document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
             updateScore('draw');
             updateConsole('Both player and dealer have blackjack');
+            endOfRoundState();
         } else if (calculateHValue(dealerHValue).initialState != 'blackjack') {
-            readyForPlayerInput = false;
-
-            // Hide all buttons
-            document.getElementById('hit-button').style.display = "none";
-            document.getElementById('stand-button').style.display = "none";
-            document.getElementById('split-button').style.display = "none";
-            document.getElementById('double-button').style.display = "none";
-            document.getElementById('next-round-button').style.display = 'inline';
             revealDealerSecondCard(dealerHand);
             document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
             updateScore('b');
             updateConsole('Player has blackjack');
+            endOfRoundState();
         }
     }
 
-    if (playerHValue[0] === playerHValue[1]) { 
+    if ((playerHValue[0] === playerHValue[1]) && (handsInPlay <= 3)) { 
         introduceRule('if both cards are worth the same value, the player may split their hand', 'split-rule');
         document.getElementById('split-button').style.display = 'inline'; 
         updateConsole('Player cards have equal value; split option available');
@@ -399,18 +434,9 @@ function calculateHValue(HValueArray) {
 // Takes the hands as arguments but doesn't change them in place
 function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, verbose = false) {
 
-    // does the player have two cards of the same value? if so, offer a split
-    // then start game; player draws first, then dealer.
-
     var result = { outcome: 'none' };
-    var availableOptions = { stand: true, hit: true, split: false, double: false , insurance: false }; // Deal with double later
-    var insuranceThisRound = false;
     var playerCurrentHand;
-    var playerSplit;
-    var playerSplitTmp1;
-    var playerSplitTmp2;
     var dealerCurrentHand;
-    var playerChoice;
 
     var playerHValuetmp = JSON.parse(JSON.stringify(playerHValue));
     var dealerHValuetmp = JSON.parse(JSON.stringify(dealerHValue));
@@ -442,41 +468,7 @@ function dealerPlay(shoe, playerHand, playerHValue, dealerHand, dealerHValue, ve
             result.note = 'Player has blackjack'
         }
     }
-    
-    // Dealer peak - if the first card is an Ace then insurance is offered. - FOR LATER
-    // if (dealerHand[0].numericValue === 24601) {
-    //     availableOptions.insurance = true;
-    //     // Prompt user for insurance here; if user accepts:
-    //     insuranceThisRound = true;
-    //     // Build insurance functionality later - settle it right here (unless it happens later in game)
-    //     // if (dealerHand[1].numericValue === 10)
-    // }
 
-    // If player's cards have the same value, offer split - FOR LATER
-    // if (playerHValuetmp[0] === playerHValuetmp[1]) {
-    //     // Offer split, if accepted:
-    //     playerSplit = true;
-    //     playerSplitTmp1 = playerHandtmp[0];
-    //     playerSplitTmp2 = playerHandtmp[1];   
-    //     playerHandsInPlay = [playerSplitTmp1, playerSplitTmp2]; 
-    // }
-
-    // BEGIN GAME
-    //  Player move - FOR LATER; IN DEV, ASSUME PLAYER ALWAYS STANDS
-    // while (result.outcome != 'bust' && result.outcome != 'win' && result.outcome != 'draw' && result.outcome != 'lose') {
-    //     if (playerSplit) {
-    //         // Handle playerSplitTmp1 and playerSplitTmp2 here
-    //     } else if (playerChoice === 'hit') {
-    //         playerHandtmp.push(shoe.shift());
-    //         // playerHandtmp.forEach(function (item) { playerHValuetmp.push(item.numericValue) });
-    //         playerHValuetmp.push(playerHandtmp[playerHandtmp.length - 1].numericValue);
-    //         playerCurrentHand = calculateHValue(playerHValuetmp);
-    
-    //         if (playerCurrentHand.initialState === 'bust') {
-    //             result.outcome = 'bust';
-    //         }
-    //     } else if 
-    // }
     // Take player hand as given
     //  Filter for options under 21 and choose max of those; if none, then bust.
     if (playerCurrentHand.postAceOptions.filter(obj => { return obj <= 21 }).length > 0) {
@@ -607,19 +599,68 @@ function resetForNextRound() {
         safetyCardPosition = Math.floor(Math.random() * (76 - 61) + 61);
         initiateDeckSetup(shoe); updateConsole('Top card discarded');
 
-        // Deal cards
-        dealCards(shoe);
-
-    } else {
-
-        // Purge hands and re-deal cards
-        dealCards(shoe);
-
-    }
+    } 
 
     document.getElementById('next-round-button').style.display = 'none';
     document.getElementById('hit-button').style = "inline";
     document.getElementById('stand-button').style = "inline";
+
+    if (splitMode) {
+        // Note that if this is being called, then one of the hands in the chain has been 
+        //  played to completion and the next one is coming up (with two cards already in it)
+        //  No need to purge, or deal since the hand is already determined. However, playerHValue
+        //  will need to be re-calculated, the player hand + total redrawn, and lines 
+        //  292-321 copied into this.
+
+        if (handsInPlay === 4) {
+            introduceRule('The player cannot have more than <span class="col-oran">4</span> hands in play.', 'split-max-rule')
+        }
+
+        // Purge and recalculate playerHValue
+        if (playerHValue.length > 0) {
+            var cardsToPurge = playerHValue.length
+            while (cardsToPurge--) { playerHValue.pop(); }
+        }
+
+        handsInPlayArr[handCurrentlyInPlay].forEach(function (item) { playerHValue.push(item.numericValue) });
+        
+        // Handle graphics
+        drawPlayerHand(handsInPlayArr[handCurrentlyInPlay], yourSub = `Hand ${handCurrentlyInPlay + 1}/${handsInPlay}`)
+
+        // Copy the rest of dealCards in: Determine which buttons are available to user
+        if (calculateHValue(playerHValue).initialState === 'blackjack') {
+            if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+                revealDealerSecondCard(dealerHand);
+                document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
+                updateScore('draw');
+                updateConsole('Both player and dealer have blackjack');
+
+                endOfRoundState();
+            } else if (calculateHValue(dealerHValue).initialState != 'blackjack') {
+                endOfRoundState();
+                revealDealerSecondCard(dealerHand);
+                document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
+                updateScore('b');
+                updateConsole('Player has blackjack');
+            }
+        }
+
+        if ((playerHValue[0] === playerHValue[1]) && (handsInPlay <= 3)) { 
+            introduceRule('if both cards are worth the same value, the player may split their hand', 'split-rule');
+            document.getElementById('split-button').style.display = 'inline'; 
+            updateConsole('Player cards have equal value; split option available');
+        }
+
+        if ((calculateHValue(playerHValue).postAceOptions.length === 1) && (calculateHValue(playerHValue).postAceOptions[0] >= 9 && calculateHValue(playerHValue).postAceOptions[0] <= 11)) {
+            introduceRule('if the player\'s total is <span class="col-emphasis">9</span>, <span class="col-emphasis">10</span>, or <span class="col-emphasis">11</span>, they may double their bet', 'double-rule');
+            document.getElementById('double-button').style.display = 'inline';
+            updateConsole('Player card sum is between 9 and 11; double option available');
+        }
+
+    } else {
+        dealCards(shoe);
+    }
+
     readyForPlayerInput = true;
 }
 
@@ -831,7 +872,14 @@ function ruleFAceCards(cardType = 'face', beforeDealReveal = true, playerHand, d
 }
 
 // Initiate rule switches
-var ruleSet = {'face-rule': false, 'ace-rule': false, 'split-rule': false, 'double-rule': false, 'insurance-rule': false}
+var ruleSet = {
+    'face-rule': false, 
+    'ace-rule': false, 
+    'split-rule': false, 
+    'double-rule': false, 
+    'insurance-rule': false, 
+    'split-max-rule': false
+}
 
 // Initialise score counter
 var scoreCount = 0;
@@ -839,8 +887,18 @@ var scoreCount = 0;
 // Set default timeout (in ms) for dealer turns
 var timeOut = 600;
 
-// Initialise hand counter - this comes into play when there is a split
+// 20211118 - Initialise hand counter - this comes into play when there is a split
+//  Implement refactor:
+//      To allow splits, the game needs to be able to handle multiple 'players' i.e. hands.
+//      Once the round is over, hit/stand/etc needs to check if the current player/hand index is
+//       the same as the total number of players/hands; if not, then it will need to switch to 
+//       the next hand and so on.
+//      Add indicators showing how many hands are in play, etc.
+//      Only follow this logic if the splitMode bool is true.
 var handsInPlay = 1;
+var handCurrentlyInPlay = 0;
+var handsInPlayArr = [];
+let splitMode = false;
 
 // Could this be done with Array.concat(Array(6).fill().map((element, index) => index).forEach(constructDeck))?
 const deck_1 = constructDeck(1);
@@ -884,7 +942,7 @@ var dealerFirstHValue = dealerHValue[0];
 
 updateConsole('Awaiting user input')
 
-document.getElementById('hit-button').addEventListener('click', function() {
+const hitBehaviour = () => {
 
     if (readyForPlayerInput) {
 
@@ -924,22 +982,21 @@ document.getElementById('hit-button').addEventListener('click', function() {
             console.log('Player has blackjack'); 
 
             if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+                endOfRoundState();
                 revealDealerSecondCard(dealerHand);
                 document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
                 updateScore('draw');
-                console.log('Both player and dealer have blackjack');
                 updateConsole('Both player and dealer have blackjack');
             } else {
+                endOfRoundState();
                 revealDealerSecondCard(dealerHand);
                 document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK</span>';
                 updateScore('b');
-                console.log('Player has blackjack');
                 updateConsole('Player has blackjack');
             }
 
             // Show next round button
             endOfRoundState();
-            // document.getElementById('next-round-button').style.display = 'inline';
 
         } else {
             console.log('No bust, player can go again');
@@ -953,9 +1010,11 @@ document.getElementById('hit-button').addEventListener('click', function() {
 
     } else { console.log('Game not ready for player input'); }
 
-})
+}
 
-document.getElementById('stand-button').addEventListener('click', function() {
+document.getElementById('hit-button').addEventListener('click', hitBehaviour)
+
+const standBehaviour = () => {
 
     if (readyForPlayerInput) {
 
@@ -1003,11 +1062,13 @@ document.getElementById('stand-button').addEventListener('click', function() {
 
     } else { console.log('Game not ready for player input'); }
 
-})
+}
+
+document.getElementById('stand-button').addEventListener('click', standBehaviour)
 
 document.getElementById('next-round-button').addEventListener('click', resetForNextRound);
 
-document.getElementById('insurance-button').addEventListener('click', function () {
+const insuranceBehaviour = () => {
     readyForPlayerInput = false;
 
     // If second dealer card is a face, then player gains 0.5 and dealer gets blackjack, so player loses
@@ -1036,11 +1097,11 @@ document.getElementById('insurance-button').addEventListener('click', function (
         readyForPlayerInput = true;
     }
     
-})
+}
 
-// A lot of the logic for this is copied from the hit and stand buttons since 
-// this is essentially just a hit then an immediate stand.
-document.getElementById('double-button').addEventListener('click', function () {
+document.getElementById('insurance-button').addEventListener('click', insuranceBehaviour)
+
+const doubleBehaviour = () => {
 
     // Upon doubling, the player will get exactly one more card face up with no more options to play.
     // This can only be done when the player has two cards.
@@ -1080,28 +1141,42 @@ document.getElementById('double-button').addEventListener('click', function () {
             // Show next round button
             revealDealerSecondCard(dealerHand);
             endOfRoundState();
-            // document.getElementById('next-round-button').style.display = 'inline';
 
         } else if (calculateHValue(playerHValuetmp).postAceOptions.includes(21)) {
             console.log('Player has blackjack'); 
 
             if (calculateHValue(dealerHValue).initialState === 'blackjack') {
+                readyForPlayerInput = false;
+
+                // Hide all buttons
+                document.getElementById('hit-button').style.display = "none";
+                document.getElementById('stand-button').style.display = "none";
+                document.getElementById('split-button').style.display = "none";
+                document.getElementById('double-button').style.display = "none";
+                document.getElementById('next-round-button').style.display = 'inline';
                 revealDealerSecondCard(dealerHand);
                 document.getElementById('player-total').innerHTML += ' <span class="col-purp">PUSH</span>';
                 updateScore('draw');
                 console.log('Both player and dealer have blackjack');
                 updateConsole('Both player and dealer have blackjack');
             } else {
+                readyForPlayerInput = false;
+
+                // Hide all buttons
+                document.getElementById('hit-button').style.display = "none";
+                document.getElementById('stand-button').style.display = "none";
+                document.getElementById('split-button').style.display = "none";
+                document.getElementById('double-button').style.display = "none";
+                document.getElementById('next-round-button').style.display = 'inline';
                 revealDealerSecondCard(dealerHand);
                 document.getElementById('player-total').innerHTML += ' <span class="col-gree">BLACKJACK ×2</span>';
                 updateScore('b-d');
                 console.log('Player has blackjack');
-                updateConsole('Player has blackjack');
+                updateConsole('Player has blackjack, winnings doubled');
             }
 
             // Show next round button
             endOfRoundState();
-            // document.getElementById('next-round-button').style.display = 'inline';
 
         } else {
 
@@ -1143,8 +1218,68 @@ document.getElementById('double-button').addEventListener('click', function () {
 
     } else { console.log('Game not ready for player input'); }
 
-})
+}
 
+// A lot of the logic for this is copied from the hit and stand buttons since 
+// this is essentially just a hit then an immediate stand.
+document.getElementById('double-button').addEventListener('click', doubleBehaviour)
+
+// Splitting -
+//  The general method is to:
+//   Update handsInPlay variable so that the for-loop knows how many hands to iterate over
+//   Handle each hand as if a separate player
+document.getElementById('split-button').addEventListener('click', function () {
+
+    if (readyForPlayerInput) {
+
+        splitMode = true;
+
+        // Copy off the player hand so the original hand is unmodified
+        var playerHandtmp1 = JSON.parse(JSON.stringify(playerHand));
+
+        // Increment handsInPlay upwards
+        handsInPlay++
+
+        // If this is the first split in the chain, then will need to set up the handsInPlayArr properly
+        //  Ensure array is empty
+        if (handsInPlay === 2) { 
+            handsInPlayArr = [];
+
+            // Take player's current hand and create two new arrays to represent their new hands.
+            handsInPlayArr.push([playerHandtmp1[0]])
+            handsInPlayArr.push([playerHandtmp1[1]])
+        } else {
+
+            // To generalise that:
+            //  The hand at handsInPlay - 2 is the first to be updated, handsInPlay - 1 is second.
+            //  If handsInPlay > 2, then there will be a hand already in the handsInPlay - 1 index
+            handsInPlayArr[handsInPlay - 2] = [playerHandtmp1[0]];
+            handsInPlayArr[handsInPlay - 1] = [playerHandtmp1[1]];
+
+        }
+
+        // The new hands will be the last two in handsInPlayArr; deal an extra card to both
+        // handsInPlayArr[handsInPlayArr.length - 2].push(shoe.shift());
+        // handsInPlayArr[handsInPlayArr.length - 1].push(shoe.shift());
+        handsInPlayArr[handsInPlay - 2].push(shoe.shift());
+        handsInPlayArr[handsInPlay - 1].push(shoe.shift());
+
+        //  Handle moving to the first hand and readying for player input
+        //   Move to first hand regardless of how many split hands there are.
+        handCurrentlyInPlay = 0;
+
+        // End of round state allows the game to go to the first hand (i.e. handCurrentlyInPlay: 0)
+        // Hide all buttons
+        document.getElementById('hit-button').style.display = "none";
+        document.getElementById('stand-button').style.display = "none";
+        document.getElementById('split-button').style.display = "none";
+        document.getElementById('double-button').style.display = "none";
+        document.getElementById('insurance-button').style.display = "none";
+        resetForNextRound();
+
+    }
+
+})
 
 //    - Can we get animated graphics? D3; Chart.js; plotly.js?
 
