@@ -292,6 +292,7 @@ li[class*='-rule'] {
 /* Player Options */
 .player-options {
     display: flex;
+    flex-wrap: wrap;
     grid-area: 4 / 2 / span 1 / span 1;
     justify-content: space-around;
     align-items: center;
