@@ -83,6 +83,7 @@ p.added-card:hover {
 }
 
 .navbar-dropdown {
+    display: none;
     position: relative;
     justify-self: end;
     align-self: center;
@@ -481,6 +482,10 @@ li[class*='-rule'] {
 
 /*  Mobile Phones - nearly full re-design */
 @media only screen and (max-width: 962px) {
+    .navbar-dropdown {
+        display: block;
+    }
+
     div.title-bar {
         height: calc(50rem/16);
         grid-area: 1 / 1 / span 1 / span 1;
@@ -502,9 +507,9 @@ li[class*='-rule'] {
     #shoe-copy {
         font-size: 1rem;
         font-weight: 300;
-        grid-area: 1 / 2 / span 1 / span 1;
+        grid-area: 1 / 1 / span 1 / span 1;
         display: flex;
-        justify-content: center;
+        padding-left: 1rem;
         align-items: center;
     }
     
