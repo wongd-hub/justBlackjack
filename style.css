@@ -507,7 +507,7 @@ li[class*='-rule'] {
     #shoe-copy {
         font-size: 1rem;
         font-weight: 300;
-        grid-area: 1 / 1 / span 1 / span 1;
+        grid-area: 1 / 1 / span 1 / span 2;
         display: flex;
         padding-left: 1rem;
         align-items: center;
